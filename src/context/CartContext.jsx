@@ -11,6 +11,8 @@ export const BAIRROS_FRETE = [
   { nome: "Outros bairros (A combinar)", taxa: 150.0 }
 ];
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
     const saved = localStorage.getItem("plural_cart");
@@ -45,7 +47,6 @@ export function CartProvider({ children }) {
     localStorage.setItem("plural_cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Cálculo das diárias
   const diasLocacao = useMemo(() => {
     if (!dataInicio || !dataFim) return 1;
     const start = new Date(dataInicio);
@@ -55,10 +56,8 @@ export function CartProvider({ children }) {
     return diffDays > 0 ? diffDays : 1;
   }, [dataInicio, dataFim]);
 
-  // Adicionar item ao carrinho
   const addItem = (product, quantidade = 1, opcoesSelecionadas = []) => {
     setCartItems((prev) => {
-      // Verificar se o item já existe com as mesmas opções
       const itemKey = `${product.id}-${opcoesSelecionadas.map(o => o.id).sort().join(",")}`;
       const existingIndex = prev.findIndex(item => item.itemKey === itemKey);
 
@@ -68,7 +67,6 @@ export function CartProvider({ children }) {
         return updated;
       }
 
-      // Calcular o preço unitário (produto + adicionais)
       const precoAdicionais = opcoesSelecionadas.reduce((acc, op) => acc + (op.preco || 0), 0);
       const precoUnitarioDiaria = (product.precoDiaria || 0) + precoAdicionais;
 
@@ -122,6 +120,36 @@ export function CartProvider({ children }) {
   const taxaFrete = bairroSelecionado ? bairroSelecionado.taxa : 0;
   const valorTotalEstimado = subtotalLocacao + taxaFrete;
 
+  const saveOrderToDB = async (orderPayload, token) => {
+    try {
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/orders`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(orderPayload)
+      });
+      if (res.ok) {
+        const order = await res.json();
+        return order;
+      }
+    } catch (e) {
+      console.warn("Backend API indisponível, salvando histórico localmente:", e);
+    }
+
+    // Salvar localmente
+    const existing = JSON.parse(localStorage.getItem("plural_orders_history") || "[]");
+    const newOrder = {
+      id: `ord-${Date.now()}`,
+      status: "PENDING",
+      ...orderPayload,
+      createdAt: new Date().toISOString()
+    };
+    localStorage.setItem("plural_orders_history", JSON.stringify([newOrder, ...existing]));
+    return newOrder;
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -145,7 +173,8 @@ export function CartProvider({ children }) {
         addItem,
         removeItem,
         updateQuantity,
-        clearCart
+        clearCart,
+        saveOrderToDB
       }}
     >
       {children}

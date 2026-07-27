@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useCart, BAIRROS_FRETE } from "../context/CartContext.jsx";
-import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+import { Link } from "react-router-dom";
 
 export default function Checkout() {
-  const navigate = useNavigate();
+  const { user, token } = useAuth();
   const {
     cartItems,
     dataInicio,
@@ -16,11 +17,12 @@ export default function Checkout() {
     subtotalLocacao,
     taxaFrete,
     valorTotalEstimado,
+    saveOrderToDB,
     clearCart
   } = useCart();
 
-  const [nome, setNome] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [nome, setNome] = useState(user?.name || "");
+  const [whatsapp, setWhatsapp] = useState(user?.phone || "");
   const [rua, setRua] = useState("");
   const [numero, setNumero] = useState("");
   const [referencia, setReferencia] = useState("");
@@ -33,7 +35,7 @@ export default function Checkout() {
     }).format(val);
   };
 
-  const handleEnviarWhatsApp = (e) => {
+  const handleEnviarWhatsApp = async (e) => {
     e.preventDefault();
 
     if (cartItems.length === 0) {
@@ -45,6 +47,25 @@ export default function Checkout() {
       alert("Por favor, preencha o seu nome, WhatsApp e rua de entrega.");
       return;
     }
+
+    const orderPayload = {
+      clientName: nome,
+      whatsapp,
+      startDate: dataInicio,
+      endDate: dataFim,
+      rentalDays: diasLocacao,
+      neighborhood: bairroSelecionado.nome,
+      address: `${rua}, Nº ${numero || 'S/N'}`,
+      reference: referencia,
+      notes: observacoes,
+      items: cartItems,
+      subtotal: subtotalLocacao,
+      freightFee: taxaFrete,
+      totalPrice: valorTotalEstimado
+    };
+
+    // Salvar o pedido no banco de dados / histórico do usuário
+    await saveOrderToDB(orderPayload, token);
 
     // Construção da mensagem formatada para WhatsApp
     let msg = `*SOLICITAÇÃO DE ORÇAMENTO - PLURAL LOCAÇÕES*\n\n`;
@@ -74,7 +95,7 @@ export default function Checkout() {
     const encodedMsg = encodeURIComponent(msg);
     const whatsappUrl = `https://wa.me/5583999087188?text=${encodedMsg}`;
 
-    // Abrir o WhatsApp
+    clearCart();
     window.open(whatsappUrl, "_blank");
   };
 
@@ -102,7 +123,7 @@ export default function Checkout() {
         <span className="text-xs uppercase font-bold text-helpusOrange">Passo Final</span>
         <h1 className="text-3xl font-extrabold text-white mt-1">Confirmar Solicitação de Orçamento</h1>
         <p className="text-neutral-400 text-sm">
-          Preencha as informações do seu evento. Enviaremos o pedido formatado diretamente para nosso atendimento no WhatsApp.
+          Preencha as informações do seu evento. O pedido será registrado no seu histórico e enviado para o WhatsApp.
         </p>
       </div>
 
@@ -298,7 +319,7 @@ export default function Checkout() {
             type="submit"
             className="w-full py-3.5 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-sm rounded-xl shadow-lg transition-transform hover:scale-[1.02] flex items-center justify-center gap-2"
           >
-            <span>Enviar no WhatsApp</span>
+            <span>Enviar no WhatsApp & Salvar</span>
             <span>📲</span>
           </button>
         </div>

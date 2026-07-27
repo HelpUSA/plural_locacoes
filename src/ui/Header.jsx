@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const MenuLink = ({ to, children }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `px-3.5 py-2 rounded-xl text-xs font-medium hover:bg-neutral-800 transition ${
+      `px-3 py-2 rounded-xl text-xs font-medium hover:bg-neutral-800 transition ${
         isActive ? "text-helpusOrange font-bold" : "text-neutral-200"
       }`
     }
@@ -18,6 +19,7 @@ const MenuLink = ({ to, children }) => (
 export default function Header() {
   const [open, setOpen] = useState(false);
   const { totalItensCount, openCart } = useCart();
+  const { user, isAuthenticated, isAdmin } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-neutral-950/80 border-b border-neutral-800/80">
@@ -43,14 +45,33 @@ export default function Header() {
           <MenuLink to="/depoimentos">Depoimentos</MenuLink>
           <MenuLink to="/orcamentos">Orçamentos</MenuLink>
           <MenuLink to="/contato">Contato</MenuLink>
-          <MenuLink to="/admin">Admin ⚙️</MenuLink>
+          {isAdmin && <MenuLink to="/admin">Admin ⚙️</MenuLink>}
         </nav>
 
-        {/* Ações (Carrinho & WhatsApp) */}
+        {/* Ações (Login/Conta, Carrinho & WhatsApp) */}
         <div className="flex items-center gap-3">
+          {isAuthenticated ? (
+            <Link
+              to="/minha-conta"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-semibold text-white hover:bg-neutral-800 transition"
+            >
+              <span className="w-6 h-6 rounded-lg bg-helpusOrange text-white flex items-center justify-center font-bold text-[11px]">
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </span>
+              <span className="hidden sm:inline line-clamp-1 max-w-[100px]">{user.name}</span>
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-semibold text-neutral-200 hover:text-white hover:bg-neutral-800 transition"
+            >
+              Entrar 🔑
+            </Link>
+          )}
+
           <button
             onClick={openCart}
-            className="relative p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-white hover:bg-neutral-800 transition flex items-center justify-center"
+            className="relative p-2 rounded-xl bg-neutral-900 border border-neutral-800 text-white hover:bg-neutral-800 transition flex items-center justify-center"
             title="Abrir carrinho de orçamento"
             aria-label="Carrinho"
           >
@@ -107,9 +128,20 @@ export default function Header() {
           <NavLink to="/contato" onClick={() => setOpen(false)} className="block py-2">
             Contato
           </NavLink>
-          <NavLink to="/admin" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
-            Painel Admin ⚙️
-          </NavLink>
+          {isAuthenticated ? (
+            <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
+              Minha Conta 👤
+            </NavLink>
+          ) : (
+            <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
+              Entrar / Cadastrar 🔑
+            </NavLink>
+          )}
+          {isAdmin && (
+            <NavLink to="/admin" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
+              Painel Admin ⚙️
+            </NavLink>
+          )}
         </div>
       )}
     </header>

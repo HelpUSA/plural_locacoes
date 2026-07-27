@@ -3,7 +3,8 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 
-// Provedores de Estado Reativo
+// Provedores de Estado Reativo & Autenticação
+import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProductProvider } from "./context/ProductContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 
@@ -20,6 +21,9 @@ import Depoimentos from "./pages/Depoimentos.jsx";
 import Contato from "./pages/Contato.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import Admin from "./pages/Admin.jsx";
+import Login from "./pages/Login.jsx";
+import Cadastro from "./pages/Cadastro.jsx";
+import MinhaConta from "./pages/MinhaConta.jsx";
 
 // Configuração das rotas
 const router = createBrowserRouter([
@@ -36,6 +40,9 @@ const router = createBrowserRouter([
       { path: "contato", element: <Contato /> },
       { path: "checkout", element: <Checkout /> },
       { path: "admin", element: <Admin /> },
+      { path: "login", element: <Login /> },
+      { path: "cadastro", element: <Cadastro /> },
+      { path: "minha-conta", element: <MinhaConta /> },
     ],
   },
 ]);
@@ -43,10 +50,12 @@ const router = createBrowserRouter([
 // Renderização principal com os provedores de estado
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ProductProvider>
-      <CartProvider>
-        <RouterProvider router={router} />
-      </CartProvider>
-    </ProductProvider>
+    <AuthProvider>
+      <ProductProvider>
+        <CartProvider>
+          <RouterProvider router={router} />
+        </CartProvider>
+      </ProductProvider>
+    </AuthProvider>
   </React.StrictMode>
 );
