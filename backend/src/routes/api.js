@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as authController from '../controllers/authController.js';
 import * as productController from '../controllers/productController.js';
 import * as orderController from '../controllers/orderController.js';
+import * as userController from '../controllers/userController.js';
 import { authenticateToken, requireAdmin } from '../middlewares/auth.js';
 
 const router = Router();
@@ -20,7 +21,6 @@ router.delete('/products/:id', authenticateToken, requireAdmin, productControlle
 
 // --- Order / Quote Routes ---
 router.post('/orders', (req, res, next) => {
-  // Autenticação opcional: vincula o pedido ao usuário se logado
   const authHeader = req.headers['authorization'];
   if (authHeader) {
     return authenticateToken(req, res, next);
@@ -31,5 +31,9 @@ router.post('/orders', (req, res, next) => {
 router.get('/orders/my-orders', authenticateToken, orderController.getMyOrders);
 router.get('/admin/orders', authenticateToken, requireAdmin, orderController.getAllOrders);
 router.patch('/admin/orders/:id/status', authenticateToken, requireAdmin, orderController.updateOrderStatus);
+
+// --- User Management Routes ---
+router.get('/admin/users', authenticateToken, requireAdmin, userController.getUsers);
+router.patch('/admin/users/:id/role', authenticateToken, requireAdmin, userController.updateUserRole);
 
 export default router;

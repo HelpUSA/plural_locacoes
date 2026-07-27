@@ -23,9 +23,12 @@ export async function createOrder(req, res) {
     }
 
     const userId = req.user ? req.user.id : null;
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const orderNumber = `ORD-${new Date().getFullYear()}-${randomNum}`;
 
     const order = await prisma.order.create({
       data: {
+        orderNumber,
         userId,
         clientName,
         whatsapp,
@@ -47,19 +50,26 @@ export async function createOrder(req, res) {
             unitPrice: item.precoUnitarioDiaria,
             addOns: JSON.stringify(item.opcoesSelecionadas || [])
           }))
+        },
+        statusHistory: {
+          create: {
+            status: 'PENDING',
+            comment: 'Solicitação de locação registrada 100% via Web'
+          }
         }
       },
       include: {
         items: {
           include: { product: true }
-        }
+        },
+        statusHistory: true
       }
     });
 
     return res.status(201).json(order);
   } catch (error) {
     console.error('Erro ao criar pedido:', error);
-    return res.status(500).json({ error: 'Erro ao registrar solicitação de orçamento.' });
+    return res.status(500).json({ error: 'Erro ao registrar solicitação de locação.' });
   }
 }
 
@@ -71,6 +81,9 @@ export async function getMyOrders(req, res) {
       include: {
         items: {
           include: { product: true }
+        },
+        statusHistory: {
+          orderBy: { createdAt: 'desc' }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -90,7 +103,10 @@ export async function getAllOrders(req, res) {
           include: { product: true }
         },
         user: {
-          select: { id: true, name: true, email: true }
+          select: { id: true, name: true, email: true, phone: true }
+        },
+        statusHistory: {
+          orderBy: { createdAt: 'desc' }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -98,23 +114,34 @@ export async function getAllOrders(req, res) {
     return res.json(orders);
   } catch (error) {
     console.error('Erro ao listar todos os pedidos (Admin):', error);
-    return res.status(500).json({ error: 'Erro ao listar orçamentos/pedidos.' });
+    return res.status(500).json({ error: 'Erro ao listar solicitações de locação.' });
   }
 }
 
 export async function updateOrderStatus(req, res) {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, comment } = req.body;
 
-    const validStatuses = ['PENDING', 'APPROVED', 'DELIVERED', 'COMPLETED', 'CANCELLED'];
+    const validStatuses = ['PENDING', 'APPROVED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'RETURNED', 'COMPLETED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Status de pedido inválido.' });
+      return res.status(400).json({ error: 'Status de locação inválido.' });
     }
 
     const updated = await prisma.order.update({
       where: { id },
-      data: { status }
+      data: {
+        status,
+        statusHistory: {
+          create: {
+            status,
+            comment: comment || `Status alterado para ${status}`
+          }
+        }
+      },
+      include: {
+        statusHistory: { orderBy: { createdAt: 'desc' } }
+      }
     });
 
     return res.json(updated);

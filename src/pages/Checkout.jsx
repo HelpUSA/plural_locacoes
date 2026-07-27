@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useCart, BAIRROS_FRETE } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Checkout() {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const {
     cartItems,
     dataInicio,
@@ -27,6 +28,7 @@ export default function Checkout() {
   const [numero, setNumero] = useState("");
   const [referencia, setReferencia] = useState("");
   const [observacoes, setObservacoes] = useState("");
+  const [processando, setProcessando] = useState(false);
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -35,7 +37,7 @@ export default function Checkout() {
     }).format(val);
   };
 
-  const handleEnviarWhatsApp = async (e) => {
+  const handleFinalizarPedidoWeb = async (e) => {
     e.preventDefault();
 
     if (cartItems.length === 0) {
@@ -47,6 +49,8 @@ export default function Checkout() {
       alert("Por favor, preencha o seu nome, WhatsApp e rua de entrega.");
       return;
     }
+
+    setProcessando(true);
 
     const orderPayload = {
       clientName: nome,
@@ -64,39 +68,20 @@ export default function Checkout() {
       totalPrice: valorTotalEstimado
     };
 
-    // Salvar o pedido no banco de dados / histórico do usuário
-    await saveOrderToDB(orderPayload, token);
+    try {
+      // Salvar a transação no banco de dados no Railway
+      const savedOrder = await saveOrderToDB(orderPayload, token);
 
-    // Construção da mensagem formatada para WhatsApp
-    let msg = `*SOLICITAÇÃO DE ORÇAMENTO - PLURAL LOCAÇÕES*\n\n`;
-    msg += `👤 *Cliente:* ${nome}\n`;
-    msg += `📱 *WhatsApp:* ${whatsapp}\n`;
-    msg += `📅 *Período do Evento:* ${dataInicio} até ${dataFim} (${diasLocacao} ${diasLocacao === 1 ? 'diária' : 'diárias'})\n`;
-    msg += `📍 *Endereço:* ${rua}, Nº ${numero || 'S/N'} - Bairro ${bairroSelecionado.nome}\n`;
-    if (referencia) msg += `📍 *Ref:* ${referencia}\n`;
-    if (observacoes) msg += `📝 *Obs:* ${observacoes}\n`;
+      clearCart();
+      setProcessando(false);
 
-    msg += `\n📦 *EQUIPAMENTOS SOLICITADOS:*\n`;
-    cartItems.forEach((item, index) => {
-      msg += `${index + 1}. *${item.quantidade}x* ${item.product.nome}`;
-      if (item.opcoesSelecionadas && item.opcoesSelecionadas.length > 0) {
-        const adic = item.opcoesSelecionadas.map(o => o.nome).join(", ");
-        msg += ` (+ ${adic})`;
-      }
-      msg += ` — ${formatCurrency(item.precoUnitarioDiaria * item.quantidade)}/diária\n`;
-    });
-
-    msg += `\n💰 *RESUMO DO ORÇAMENTO:*\n`;
-    msg += `- Subtotal Equipamentos (${diasLocacao}d): ${formatCurrency(subtotalLocacao)}\n`;
-    msg += `- Taxa de Entrega estimada (${bairroSelecionado.nome}): ${formatCurrency(taxaFrete)}\n`;
-    msg += `*VALOR TOTAL ESTIMADO: ${formatCurrency(valorTotalEstimado)}*\n\n`;
-    msg += `Aguardamos a confirmação da disponibilidade para este período!`;
-
-    const encodedMsg = encodeURIComponent(msg);
-    const whatsappUrl = `https://wa.me/5583999087188?text=${encodedMsg}`;
-
-    clearCart();
-    window.open(whatsappUrl, "_blank");
+      // Redirecionar para o comprovante web
+      navigate("/confirmacao-pedido", { state: { order: savedOrder } });
+    } catch (error) {
+      console.error("Erro ao finalizar pedido:", error);
+      alert("Houve uma falha ao salvar o pedido. Tente novamente.");
+      setProcessando(false);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -121,13 +106,13 @@ export default function Checkout() {
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
       <div>
         <span className="text-xs uppercase font-bold text-helpusOrange">Passo Final</span>
-        <h1 className="text-3xl font-extrabold text-white mt-1">Confirmar Solicitação de Orçamento</h1>
+        <h1 className="text-3xl font-extrabold text-white mt-1">Finalizar Reserva de Locação</h1>
         <p className="text-neutral-400 text-sm">
-          Preencha as informações do seu evento. O pedido será registrado no seu histórico e enviado para o WhatsApp.
+          Preencha os dados do seu evento. O pedido será registrado no banco de dados e gerará seu comprovante de reserva.
         </p>
       </div>
 
-      <form onSubmit={handleEnviarWhatsApp} className="grid lg:grid-cols-3 gap-8">
+      <form onSubmit={handleFinalizarPedidoWeb} className="grid lg:grid-cols-3 gap-8">
         {/* Formulário de Dados */}
         <div className="lg:col-span-2 space-y-6 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl">
           <h3 className="font-bold text-lg text-white border-b border-neutral-800 pb-3 flex items-center gap-2">
@@ -285,10 +270,10 @@ export default function Checkout() {
             {cartItems.map((item) => (
               <div key={item.itemKey} className="flex items-center justify-between text-xs py-1 border-b border-neutral-800/60">
                 <div>
-                  <span className="font-bold text-white">{item.quantidade}x</span> {item.product.nome}
+                  <span className="font-bold text-white">{item.quantidade}x</span> {item.product.nome || item.product.name}
                   {item.opcoesSelecionadas.length > 0 && (
                     <span className="block text-[10px] text-neutral-400">
-                      + {item.opcoesSelecionadas.map(o => o.nome).join(", ")}
+                      + {item.opcoesSelecionadas.map(o => o.nome || o.name).join(", ")}
                     </span>
                   )}
                 </div>
@@ -317,10 +302,11 @@ export default function Checkout() {
 
           <button
             type="submit"
-            className="w-full py-3.5 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-sm rounded-xl shadow-lg transition-transform hover:scale-[1.02] flex items-center justify-center gap-2"
+            disabled={processando}
+            className="w-full py-3.5 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-sm rounded-xl shadow-lg transition-transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <span>Enviar no WhatsApp & Salvar</span>
-            <span>📲</span>
+            <span>{processando ? "Registrando Reserva..." : "Concluir Reserva no Site"}</span>
+            <span>⚡</span>
           </button>
         </div>
       </form>

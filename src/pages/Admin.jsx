@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useProducts } from "../context/ProductContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct, resetToDefault } = useProducts();
   const { user, token, isAdmin } = useAuth();
-  const navigate = useNavigate();
 
-  const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos" ou "pedidos"
+  const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos", "pedidos", "usuarios"
   const [pedidos, setPedidos] = useState([]);
-  const [loadingPedidos, setLoadingPedidos] = useState(false);
+  const [usuarios, setUsuarios] = useState([]);
+  const [loadingDados, setLoadingDados] = useState(false);
 
   const [modalAberto, setModalAberto] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
@@ -19,10 +19,12 @@ export default function Admin() {
   const [nome, setNome] = useState("");
   const [categoria, setCategoria] = useState("mesas");
   const [precoDiaria, setPrecoDiaria] = useState("");
+  const [precoSemanal, setPrecoSemanal] = useState("");
   const [imagem, setImagem] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [destaque, setDestaque] = useState("");
+  const [highlight, setDestaque] = useState("");
   const [estoque, setEstoque] = useState("50");
+  const [specsText, setSpecsText] = useState("");
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -30,11 +32,11 @@ export default function Admin() {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL"
-    }).format(val);
+    }).format(val || 0);
   };
 
   const fetchPedidos = async () => {
-    setLoadingPedidos(true);
+    setLoadingDados(true);
     try {
       const res = await fetch(`${API_BASE}/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -50,14 +52,34 @@ export default function Admin() {
       const savedOrders = JSON.parse(localStorage.getItem("plural_orders_history") || "[]");
       setPedidos(savedOrders);
     } finally {
-      setLoadingPedidos(false);
+      setLoadingDados(false);
+    }
+  };
+
+  const fetchUsuarios = async () => {
+    setLoadingDados(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsuarios(data);
+      } else {
+        // Fallback local
+        const currentUser = user ? [user] : [];
+        setUsuarios(currentUser);
+      }
+    } catch (e) {
+      setUsuarios(user ? [user] : []);
+    } finally {
+      setLoadingDados(false);
     }
   };
 
   useEffect(() => {
-    if (abaAtiva === "pedidos") {
-      fetchPedidos();
-    }
+    if (abaAtiva === "pedidos") fetchPedidos();
+    if (abaAtiva === "usuarios") fetchUsuarios();
   }, [abaAtiva]);
 
   const handleMudarStatus = async (orderId, novoStatus) => {
@@ -79,27 +101,54 @@ export default function Admin() {
     );
   };
 
+  const handleMudarRoleUsuario = async (userId, novoRole) => {
+    try {
+      await fetch(`${API_BASE}/admin/users/${userId}/role`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ roleCode: novoRole })
+      });
+    } catch (e) {
+      console.warn("Mudar role offline:", e);
+    }
+
+    setUsuarios((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, roleCode: novoRole } : u))
+    );
+  };
+
   const abrirModalCriar = () => {
     setProdutoEditando(null);
     setNome("");
     setCategoria("mesas");
     setPrecoDiaria("");
+    setPrecoSemanal("");
     setImagem("/mesas-e-cadeiras-01.jpeg");
     setDescricao("");
     setDestaque("");
     setEstoque("50");
+    setSpecsText("Capacidade: 8 lugares\nMaterial: MDF com pés de aço");
     setModalAberto(true);
   };
 
   const abrirModalEditar = (prod) => {
     setProdutoEditando(prod);
-    setNome(prod.nome);
-    setCategoria(prod.categoria || "mesas");
-    setPrecoDiaria(prod.precoDiaria.toString());
-    setImagem(prod.imagem || "");
-    setDescricao(prod.descricao || "");
-    setDestaque(prod.destaque || "");
-    setEstoque((prod.estoque || 50).toString());
+    setNome(prod.nome || prod.name);
+    setCategoria(prod.categoria || prod.category || "mesas");
+    setPrecoDiaria((prod.precoDiaria || prod.priceDaily || "").toString());
+    setPrecoSemanal((prod.precoSemanal || prod.priceWeekly || "").toString());
+    setImagem(prod.imagem || prod.image || "");
+    setDescricao(prod.descricao || prod.description || "");
+    setDestaque(prod.destaque || prod.highlight || "");
+    setEstoque((prod.estoque || prod.stock || 50).toString());
+    setSpecsText(
+      typeof prod.specsJSON === "string"
+        ? prod.specsJSON
+        : JSON.stringify(prod.especificacoes || {}, null, 2)
+    );
     setModalAberto(true);
   };
 
@@ -110,11 +159,12 @@ export default function Admin() {
       nome,
       categoria,
       precoDiaria: parseFloat(precoDiaria) || 0,
+      precoSemanal: parseFloat(precoSemanal) || 0,
       imagem: imagem || "/mesas-e-cadeiras-01.jpeg",
       descricao,
       destaque,
       estoque: parseInt(estoque, 10) || 0,
-      opcoesAdicionais: produtoEditando?.opcoesAdicionais || []
+      specsJSON: specsText
     };
 
     if (produtoEditando) {
@@ -145,9 +195,9 @@ export default function Admin() {
   }
 
   const totalProdutos = products.length;
-  const totalEstoque = products.reduce((acc, p) => acc + (p.estoque || 0), 0);
+  const totalEstoque = products.reduce((acc, p) => acc + (p.estoque || p.stock || 0), 0);
   const mediaPreco = totalProdutos
-    ? products.reduce((acc, p) => acc + (p.precoDiaria || 0), 0) / totalProdutos
+    ? products.reduce((acc, p) => acc + (p.precoDiaria || p.priceDaily || 0), 0) / totalProdutos
     : 0;
 
   return (
@@ -156,13 +206,13 @@ export default function Admin() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-6">
         <div>
           <span className="text-xs uppercase font-bold text-helpusOrange">Painel de Gestão Corporativo</span>
-          <h1 className="text-3xl font-extrabold text-white">Painel Administrativo</h1>
+          <h1 className="text-3xl font-extrabold text-white">Administração Plural Locações</h1>
           <p className="text-neutral-400 text-sm">
-            Gerencie o catálogo de produtos e acompanhe os orçamentos/pedidos de locação dos clientes.
+            Gerencie equipamentos, monitore reservas web e gerencie permissões de usuários.
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setAbaAtiva("produtos")}
             className={`py-2.5 px-4 text-xs font-bold rounded-xl transition ${
@@ -173,6 +223,7 @@ export default function Admin() {
           >
             📦 Catálogo ({totalProdutos})
           </button>
+
           <button
             onClick={() => setAbaAtiva("pedidos")}
             className={`py-2.5 px-4 text-xs font-bold rounded-xl transition ${
@@ -181,17 +232,28 @@ export default function Admin() {
                 : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
             }`}
           >
-            📋 Pedidos & Entregas
+            📋 Reservas & Romaneio
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva("usuarios")}
+            className={`py-2.5 px-4 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "usuarios"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            👥 Usuários & Perfis
           </button>
         </div>
       </div>
 
-      {abaAtiva === "produtos" ? (
+      {abaAtiva === "produtos" && (
         <>
           {/* Cards Estatísticas Produtos */}
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
-              <span className="text-xs text-neutral-400 font-medium">Equipamentos Cadastrados</span>
+              <span className="text-xs text-neutral-400 font-medium">Equipamentos no Acervo</span>
               <div className="text-3xl font-black text-white mt-1">{totalProdutos}</div>
             </div>
 
@@ -209,12 +271,12 @@ export default function Admin() {
           {/* Tabela de Produtos */}
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
             <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
-              <span className="font-bold text-white text-sm">Lista de Equipamentos do Catálogo</span>
+              <span className="font-bold text-white text-sm">Acervo de Equipamentos</span>
               <button
                 onClick={abrirModalCriar}
                 className="py-2 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white text-xs font-bold rounded-xl shadow transition"
               >
-                + Novo Produto 📦
+                + Novo Equipamento 📦
               </button>
             </div>
 
@@ -234,25 +296,25 @@ export default function Admin() {
                     <tr key={prod.id} className="hover:bg-neutral-950/50 transition">
                       <td className="p-4 flex items-center gap-3">
                         <img
-                          src={prod.imagem}
-                          alt={prod.nome}
+                          src={prod.imagem || prod.image}
+                          alt={prod.nome || prod.name}
                           className="w-10 h-10 object-cover rounded-lg border border-neutral-800"
                         />
                         <div>
-                          <div className="font-bold text-white text-sm">{prod.nome}</div>
-                          <div className="text-neutral-500 text-[11px] truncate max-w-xs">{prod.destaque || prod.descricao}</div>
+                          <div className="font-bold text-white text-sm">{prod.nome || prod.name}</div>
+                          <div className="text-neutral-500 text-[11px] truncate max-w-xs">{prod.destaque || prod.highlight || prod.descricao}</div>
                         </div>
                       </td>
                       <td className="p-4">
                         <span className="px-2.5 py-1 rounded bg-neutral-800 text-neutral-300 capitalize font-medium">
-                          {prod.categoria}
+                          {prod.categoria || prod.category}
                         </span>
                       </td>
                       <td className="p-4 font-bold text-white text-sm">
-                        {formatCurrency(prod.precoDiaria)}
+                        {formatCurrency(prod.precoDiaria || prod.priceDaily)}
                       </td>
                       <td className="p-4 font-medium text-neutral-300">
-                        {prod.estoque || 50} un
+                        {prod.estoque || prod.stock || 50} un
                       </td>
                       <td className="p-4 text-right space-x-2">
                         <button
@@ -263,7 +325,7 @@ export default function Admin() {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Deseja remover o produto "${prod.nome}"?`)) {
+                            if (confirm(`Deseja remover o produto "${prod.nome || prod.name}"?`)) {
                               deleteProduct(prod.id);
                             }
                           }}
@@ -279,16 +341,17 @@ export default function Admin() {
             </div>
           </div>
         </>
-      ) : (
-        /* Aba Pedidos */
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-white">Gerenciamento de Pedidos e Solicitações de Locação</h2>
+      )}
 
-          {loadingPedidos ? (
-            <div className="text-center py-12 text-neutral-400 text-sm">Carregando pedidos...</div>
+      {abaAtiva === "pedidos" && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-white">Gestão de Transações e Entregas em Tempo Real</h2>
+
+          {loadingDados ? (
+            <div className="text-center py-12 text-neutral-400 text-sm">Carregando reservas...</div>
           ) : pedidos.length === 0 ? (
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-400 text-xs">
-              Nenhum pedido/orçamento registrado até o momento.
+              Nenhuma reserva web registrada até o momento.
             </div>
           ) : (
             <div className="space-y-4">
@@ -300,7 +363,7 @@ export default function Admin() {
                   <div className="flex flex-wrap items-center justify-between border-b border-neutral-800 pb-3 gap-2">
                     <div>
                       <div className="text-sm font-bold text-white">
-                        👤 {order.clientName} ({order.whatsapp})
+                        👤 {order.clientName} ({order.whatsapp}) — <span className="text-helpusOrange">{order.orderNumber || order.id}</span>
                       </div>
                       <div className="text-xs text-neutral-400 mt-0.5">
                         📍 {order.address} ({order.neighborhood}) • 📅 {order.startDate} até {order.endDate} ({order.rentalDays}d)
@@ -308,24 +371,25 @@ export default function Admin() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-neutral-400">Alterar Status:</span>
+                      <span className="text-xs text-neutral-400">Status da Locação:</span>
                       <select
                         value={order.status}
                         onChange={(e) => handleMudarStatus(order.id, e.target.value)}
                         className="bg-neutral-950 border border-neutral-700 text-white rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-helpusOrange font-semibold"
                       >
-                        <option value="PENDING">⏳ Pendente / Análise</option>
+                        <option value="PENDING">⏳ Registrado / Em Análise</option>
                         <option value="APPROVED">✅ Aprovado</option>
-                        <option value="DELIVERED">🚚 Entregue</option>
-                        <option value="COMPLETED">🎉 Concluído</option>
+                        <option value="PREPARING">📦 Em Separação no Galpão</option>
+                        <option value="OUT_FOR_DELIVERY">🚚 Saiu para Entrega</option>
+                        <option value="DELIVERED">🎪 Entregue no Local</option>
+                        <option value="COMPLETED">🏁 Recolhido & Concluído</option>
                         <option value="CANCELLED">❌ Cancelado</option>
                       </select>
                     </div>
                   </div>
 
-                  {/* Valor Total */}
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-neutral-400">Valor Total do Orçamento:</span>
+                    <span className="text-neutral-400">Valor Total do Pedido:</span>
                     <span className="text-lg font-bold text-helpusOrange">
                       {formatCurrency(order.totalPrice || order.total)}
                     </span>
@@ -337,13 +401,54 @@ export default function Admin() {
         </div>
       )}
 
+      {abaAtiva === "usuarios" && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-white">Gestão de Usuários & Níveis de Acesso (RBAC)</h2>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-neutral-300">
+                <thead className="bg-neutral-950 text-neutral-400 uppercase font-semibold border-b border-neutral-800">
+                  <tr>
+                    <th className="p-4">Usuário</th>
+                    <th className="p-4">E-mail</th>
+                    <th className="p-4">Telefone</th>
+                    <th className="p-4">Perfil de Acesso</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800/60">
+                  {usuarios.map((u) => (
+                    <tr key={u.id} className="hover:bg-neutral-950/50 transition">
+                      <td className="p-4 font-bold text-white">{u.name}</td>
+                      <td className="p-4 text-neutral-300">{u.email}</td>
+                      <td className="p-4 text-neutral-400">{u.phone || "—"}</td>
+                      <td className="p-4">
+                        <select
+                          value={u.roleCode || (u.role === "ADMIN" ? "ADMIN" : "CLIENT")}
+                          onChange={(e) => handleMudarRoleUsuario(u.id, e.target.value)}
+                          className="bg-neutral-950 border border-neutral-700 text-white rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-helpusOrange font-bold"
+                        >
+                          <option value="CLIENT">👤 Cliente</option>
+                          <option value="ADMIN">👑 Administrador</option>
+                          <option value="LOGISTICS">🚚 Equipe Logística / Entregas</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Formulário Criar/Editar Produto */}
       {modalAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-lg w-full p-6 text-white space-y-4 shadow-2xl animate-fadeIn">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
               <h3 className="font-bold text-lg">
-                {produtoEditando ? "Editar Produto" : "Novo Produto para Locação"}
+                {produtoEditando ? "Editar Equipamento" : "Novo Equipamento para Locação"}
               </h3>
               <button onClick={() => setModalAberto(false)} className="text-neutral-400 hover:text-white">
                 ✕
@@ -375,7 +480,7 @@ export default function Admin() {
                     <option value="conjuntos">Kits & Conjuntos</option>
                     <option value="tendas">Tendas & Coberturas</option>
                     <option value="enxoval">Enxoval & Toalhas</option>
-                    <option value="iluminacao">Iluminação & Som</option>
+                    <option value="iluminacao-climatizacao">Iluminação & Climatização</option>
                   </select>
                 </div>
 
@@ -404,7 +509,7 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <label className="block text-neutral-400 mb-1">Estoque</label>
+                  <label className="block text-neutral-400 mb-1">Estoque Disponível</label>
                   <input
                     type="number"
                     value={estoque}
@@ -412,6 +517,28 @@ export default function Admin() {
                     className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-helpusOrange"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Frase de Destaque / Badge</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Campeão de vendas para casamentos"
+                  value={highlight}
+                  onChange={(e) => setDestaque(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-helpusOrange"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Especificações Técnicas (Key: Value)</label>
+                <textarea
+                  rows="2"
+                  placeholder="Material: Aço carbono&#10;Dimensões: 1,20m"
+                  value={specsText}
+                  onChange={(e) => setSpecsText(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-helpusOrange"
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
@@ -426,7 +553,7 @@ export default function Admin() {
                   type="submit"
                   className="py-2 px-5 bg-helpusOrange text-white rounded-xl font-bold shadow"
                 >
-                  Salvar Produto
+                  Salvar Equipamento
                 </button>
               </div>
             </form>

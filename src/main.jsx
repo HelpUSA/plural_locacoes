@@ -20,6 +20,7 @@ import Orcamentos from "./pages/Orcamentos.jsx";
 import Depoimentos from "./pages/Depoimentos.jsx";
 import Contato from "./pages/Contato.jsx";
 import Checkout from "./pages/Checkout.jsx";
+import ConfirmacaoPedido from "./pages/ConfirmacaoPedido.jsx";
 import Admin from "./pages/Admin.jsx";
 import Login from "./pages/Login.jsx";
 import Cadastro from "./pages/Cadastro.jsx";
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
       { path: "depoimentos", element: <Depoimentos /> },
       { path: "contato", element: <Contato /> },
       { path: "checkout", element: <Checkout /> },
+      { path: "confirmacao-pedido", element: <ConfirmacaoPedido /> },
       { path: "admin", element: <Admin /> },
       { path: "login", element: <Login /> },
       { path: "cadastro", element: <Cadastro /> },
