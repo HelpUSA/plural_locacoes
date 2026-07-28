@@ -16,6 +16,7 @@ router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
 router.post('/auth/google', authController.loginGoogle);
 router.get('/auth/me', authenticateToken, authController.getMe);
+router.put('/auth/me', authenticateToken, authController.updateProfile);
 
 // --- Product Routes ---
 router.get('/products', productController.getProducts);
@@ -40,6 +41,7 @@ router.patch('/admin/orders/:id/status', authenticateToken, requireAdmin, orderC
 // --- User Management Routes ---
 router.get('/admin/users', authenticateToken, requireAdmin, userController.getUsers);
 router.post('/admin/users', authenticateToken, requireAdmin, userController.createUser);
+router.put('/admin/users/:id', authenticateToken, requireAdmin, userController.updateUser);
 router.patch('/admin/users/:id/role', authenticateToken, requireAdmin, userController.updateUserRole);
 router.delete('/admin/users/:id', authenticateToken, requireAdmin, userController.deleteUser);
 

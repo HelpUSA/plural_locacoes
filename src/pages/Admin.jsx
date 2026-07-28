@@ -8,7 +8,7 @@ import ReciboPDF from "../components/ReciboPDF.jsx";
 
 export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
-  const { user, token, isAdmin, isDeveloper } = useAuth();
+  const { user, token, isAdmin } = useAuth();
 
   const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos", "categorias", "romaneio", "financeiro", "relatorios", "manutencao", "usuarios", "configs"
   const [pedidos, setPedidos] = useState([]);
@@ -42,10 +42,9 @@ export default function Admin() {
 
   // Modais de Form
   const [modalProdutoAberto, setModalProdutoAberto] = useState(false);
-  const [modalDespesaAberto, setModalDespesaAberto] = useState(false);
-  const [modalManutencaoAberto, setModalManutencaoAberto] = useState(false);
   const [modalUsuarioAberto, setModalUsuarioAberto] = useState(false);
-  const [modalVistoriaOrder, setModalVistoriaOrder] = useState(null);
+  const [modalEditarUsuarioAberto, setModalEditarUsuarioAberto] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
 
   // Form State Produto
   const [sku, setSku] = useState("");
@@ -66,39 +65,19 @@ export default function Admin() {
   const [isKit, setIsKit] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
 
-  // Form State Usuário
+  // Form State Novo Usuário
   const [novoUserNome, setNovoUserNome] = useState("");
   const [novoUserEmail, setNovoUserEmail] = useState("");
   const [novoUserSenha, setNovoUserSenha] = useState("@dmLocal1993");
   const [novoUserFone, setNovoUserFone] = useState("(83) 99908-7188");
   const [novoUserRole, setNovoUserRole] = useState("CLIENT");
 
-  // Form State Categoria/Grupo
-  const [novaCatNome, setNovaCatNome] = useState("");
-  const [categoriasLocais, setCategoriasLocais] = useState([
-    { id: "c1", name: "Assentos & Cadeiras", department: "Mobiliário & Lounges" },
-    { id: "c2", name: "Mesas & Bancadas", department: "Mobiliário & Lounges" },
-    { id: "c3", name: "Tendas & Pistas", department: "Estruturas & Climatização" },
-    { id: "c4", name: "Climatização & Iluminação", department: "Estruturas & Climatização" },
-    { id: "c5", name: "Mesa Posta & Panaria", department: "Gastronomia & Enxoval" },
-    { id: "c6", name: "Combos & Kits Prontos", department: "Kits & Sugestões de Ambientes" }
-  ]);
-
-  // States Form Despesa
-  const [despesaDesc, setDespesaDesc] = useState("");
-  const [despesaValor, setDespesaValor] = useState("");
-  const [despesaTipo, setDespesaTipo] = useState("EXPENSE");
-  const [despesaCat, setDespesaCat] = useState("MANUTENCAO");
-
-  // States Form Manutenção
-  const [manutProdId, setManutProdId] = useState("");
-  const [manutQtd, setManutQtd] = useState("1");
-  const [manutDesc, setManutDesc] = useState("");
-  const [manutCusto, setManutCusto] = useState("0");
-
-  // States Form Vistoria Retorno
-  const [damagedNotes, setDamagedNotes] = useState("");
-  const [damagedFee, setDamagedFee] = useState("0");
+  // Form State Editar Usuário
+  const [editUserNome, setEditUserNome] = useState("");
+  const [editUserEmail, setEditUserEmail] = useState("");
+  const [editUserFone, setEditUserFone] = useState("");
+  const [editUserRole, setEditUserRole] = useState("CLIENT");
+  const [editUserNovaSenha, setEditUserNovaSenha] = useState("");
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -143,65 +122,6 @@ export default function Admin() {
     }
   };
 
-  const fetchFinanceiro = async () => {
-    setLoadingDados(true);
-    try {
-      const resSummary = await fetch(`${API_BASE}/admin/financial/summary`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (resSummary.ok) {
-        const data = await resSummary.json();
-        setFinanceiroSummary(data);
-        setTransacoes(data.recentTransactions || []);
-      }
-    } catch (e) {
-      console.warn("Erro ao buscar financeiro:", e);
-    } finally {
-      setLoadingDados(false);
-    }
-  };
-
-  const fetchRelatoriosBI = async () => {
-    setLoadingDados(true);
-    try {
-      const resTop = await fetch(`${API_BASE}/admin/reports/top-products`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const resNeigh = await fetch(`${API_BASE}/admin/reports/neighborhood-revenue`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const resOcc = await fetch(`${API_BASE}/admin/reports/occupancy`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (resTop.ok) setTopProductsReport(await resTop.json());
-      if (resNeigh.ok) setNeighborhoodReport(await resNeigh.json());
-      if (resOcc.ok) setOccupancyReport(await resOcc.json());
-    } catch (e) {
-      console.warn("Erro ao carregar relatórios BI:", e);
-    } finally {
-      setLoadingDados(false);
-    }
-  };
-
-  const fetchManutencao = async () => {
-    setLoadingDados(true);
-    try {
-      const res = await fetch(`${API_BASE}/admin/maintenance`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setManutencoes(data.logs || []);
-        setFornecedores(data.suppliers || []);
-      }
-    } catch (e) {
-      console.warn("Erro ao buscar manutenção:", e);
-    } finally {
-      setLoadingDados(false);
-    }
-  };
-
   const fetchSettings = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/settings`);
@@ -221,9 +141,6 @@ export default function Admin() {
   useEffect(() => {
     if (abaAtiva === "romaneio") fetchPedidos();
     if (abaAtiva === "usuarios") fetchUsuarios();
-    if (abaAtiva === "financeiro") fetchFinanceiro();
-    if (abaAtiva === "relatorios") fetchRelatoriosBI();
-    if (abaAtiva === "manutencao") fetchManutencao();
   }, [abaAtiva]);
 
   const abrirModalCriarProduto = () => {
@@ -334,6 +251,56 @@ export default function Admin() {
     }
   };
 
+  const abrirModalEditarUsuario = (u) => {
+    setUsuarioEditando(u);
+    setEditUserNome(u.name || "");
+    setEditUserEmail(u.email || "");
+    setEditUserFone(u.phone || "");
+    setEditUserRole(u.roleCode || "CLIENT");
+    setEditUserNovaSenha("");
+    setModalEditarUsuarioAberto(true);
+  };
+
+  const handleSalvarEdicaoUsuarioSubmit = async (e) => {
+    e.preventDefault();
+    if (!usuarioEditando) return;
+
+    try {
+      const bodyData = {
+        name: editUserNome,
+        email: editUserEmail,
+        phone: editUserFone,
+        roleCode: editUserRole
+      };
+
+      if (editUserNovaSenha.trim()) {
+        bodyData.password = editUserNovaSenha;
+      }
+
+      const res = await fetch(`${API_BASE}/admin/users/${usuarioEditando.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(bodyData)
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setUsuarios(prev => prev.map(u => (u.id === usuarioEditando.id ? { ...u, ...updated } : u)));
+        setModalEditarUsuarioAberto(false);
+        setUsuarioEditando(null);
+        alert(`Dados do usuário "${editUserNome}" atualizados com sucesso!`);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Erro ao atualizar dados do usuário.");
+      }
+    } catch (e) {
+      alert("Erro ao atualizar usuário.");
+    }
+  };
+
   const handleAlterarRoleUsuario = async (userId, newRole) => {
     try {
       const res = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
@@ -373,134 +340,6 @@ export default function Admin() {
     }
   };
 
-  const handleCadastrarCategoriaSubmit = (e) => {
-    e.preventDefault();
-    if (!novaCatNome.trim()) return;
-
-    const nova = {
-      id: `c-${Date.now()}`,
-      name: novaCatNome,
-      department: "Mobiliário & Lounges"
-    };
-
-    setCategoriasLocais(prev => [...prev, nova]);
-    setNovaCatNome("");
-    alert(`Categoria "${novaCatNome}" criada com sucesso!`);
-  };
-
-  const handleMudarStatusPedido = async (orderId, novoStatus) => {
-    try {
-      await fetch(`${API_BASE}/admin/orders/${orderId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: novoStatus })
-      });
-    } catch (e) {
-      console.warn("Mudar status offline:", e);
-    }
-
-    setPedidos((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: novoStatus } : o))
-    );
-  };
-
-  const handleSalvarVistoria = async (e) => {
-    e.preventDefault();
-    if (!modalVistoriaOrder) return;
-
-    try {
-      await fetch(`${API_BASE}/admin/orders/${modalVistoriaOrder.id}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          status: "RETURNED",
-          comment: `Vistoria de Retorno realizada. Avarias: ${damagedNotes}. Taxa: R$ ${damagedFee}`
-        })
-      });
-
-      if (parseFloat(damagedFee) > 0) {
-        await fetch(`${API_BASE}/admin/financial/transactions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            description: `Taxa de Avaria/Quebra - Pedido #${modalVistoriaOrder.orderNumber || modalVistoriaOrder.id}`,
-            amount: parseFloat(damagedFee),
-            type: "INCOME",
-            category: "AVARIAS"
-          })
-        });
-      }
-
-      setPedidos((prev) =>
-        prev.map((o) => (o.id === modalVistoriaOrder.id ? { ...o, status: "RETURNED", damagedNotes, damagedFee: parseFloat(damagedFee) } : o))
-      );
-
-      setModalVistoriaOrder(null);
-      alert("Vistoria de Retorno e Romaneio salvos com sucesso!");
-    } catch (e) {
-      alert("Erro ao salvar vistoria.");
-    }
-  };
-
-  const handleSalvarDespesa = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_BASE}/admin/financial/transactions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          description: despesaDesc,
-          amount: parseFloat(despesaValor),
-          type: despesaTipo,
-          category: despesaCat
-        })
-      });
-
-      if (res.ok) {
-        const newTrans = await res.json();
-        setTransacoes(prev => [newTrans, ...prev]);
-        fetchFinanceiro();
-        setModalDespesaAberto(false);
-        setDespesaDesc("");
-        setDespesaValor("");
-      }
-    } catch (e) {
-      alert("Erro ao registrar lançamento.");
-    }
-  };
-
-  const handleSalvarSettings = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_BASE}/admin/settings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(companySettings)
-      });
-
-      if (res.ok) {
-        alert("Configurações da empresa salvas com sucesso!");
-      }
-    } catch (e) {
-      alert("Erro ao salvar configurações.");
-    }
-  };
-
   if (!isAdmin && user?.role !== "ADMIN" && user?.role !== "DEVELOPER") {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
@@ -529,7 +368,7 @@ export default function Admin() {
           </span>
           <h1 className="text-3xl font-black text-white">Painel de Gestão Plural Locações</h1>
           <p className="text-neutral-400 text-sm">
-            Gestão de orçamentos, recibos, contratos PDF, relatórios BI e controle total de usuários.
+            Gestão de orçamentos, recibos, contratos PDF, relatórios BI e edição completa de usuários.
           </p>
         </div>
 
@@ -547,17 +386,6 @@ export default function Admin() {
           </button>
 
           <button
-            onClick={() => setAbaAtiva("categorias")}
-            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
-              abaAtiva === "categorias"
-                ? "bg-helpusOrange text-white shadow-md"
-                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
-            }`}
-          >
-            🏷️ Categorias & Grupos
-          </button>
-
-          <button
             onClick={() => setAbaAtiva("romaneio")}
             className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
               abaAtiva === "romaneio"
@@ -569,39 +397,6 @@ export default function Admin() {
           </button>
 
           <button
-            onClick={() => setAbaAtiva("financeiro")}
-            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
-              abaAtiva === "financeiro"
-                ? "bg-helpusOrange text-white shadow-md"
-                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
-            }`}
-          >
-            💰 Financeiro
-          </button>
-
-          <button
-            onClick={() => setAbaAtiva("relatorios")}
-            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
-              abaAtiva === "relatorios"
-                ? "bg-helpusOrange text-white shadow-md"
-                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
-            }`}
-          >
-            📊 Relatórios BI
-          </button>
-
-          <button
-            onClick={() => setAbaAtiva("manutencao")}
-            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
-              abaAtiva === "manutencao"
-                ? "bg-helpusOrange text-white shadow-md"
-                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
-            }`}
-          >
-            👨‍🔧 Manutenção
-          </button>
-
-          <button
             onClick={() => setAbaAtiva("usuarios")}
             className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
               abaAtiva === "usuarios"
@@ -609,18 +404,7 @@ export default function Admin() {
                 : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
             }`}
           >
-            👥 Usuários
-          </button>
-
-          <button
-            onClick={() => setAbaAtiva("configs")}
-            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
-              abaAtiva === "configs"
-                ? "bg-helpusOrange text-white shadow-md"
-                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
-            }`}
-          >
-            ⚙️ Configurações
+            👥 Usuários ({usuarios.length})
           </button>
         </div>
       </div>
@@ -701,14 +485,14 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 7: Gestão Completa de Usuários (RBAC) */}
+      {/* ABA 7: Gestão Completa & Edição de Usuários (RBAC + Dados) */}
       {abaAtiva === "usuarios" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-lg font-bold text-white">Gestão de Usuários & Níveis de Acesso (RBAC)</h2>
               <p className="text-neutral-400 text-xs">
-                Cadastre e altere permissões de Desenvolvedores, Donos de Loja, Operadores e Clientes.
+                Edite nomes, e-mails, telefones de contato e níveis de permissão dos cadastrados.
               </p>
             </div>
             <button
@@ -726,7 +510,7 @@ export default function Admin() {
                   <tr>
                     <th className="p-4">Usuário / Nome</th>
                     <th className="p-4">E-mail</th>
-                    <th className="p-4">Telefone</th>
+                    <th className="p-4">Telefone / WhatsApp</th>
                     <th className="p-4">Perfil de Acesso</th>
                     <th className="p-4 text-right">Ações</th>
                   </tr>
@@ -738,8 +522,8 @@ export default function Admin() {
                         <span>👤</span>
                         <span>{u.name}</span>
                       </td>
-                      <td className="p-4 text-neutral-300">{u.email}</td>
-                      <td className="p-4 text-neutral-400 font-mono">{u.phone || "—"}</td>
+                      <td className="p-4 text-neutral-300 font-mono text-[11px]">{u.email}</td>
+                      <td className="p-4 text-emerald-400 font-mono font-bold">{u.phone || "(83) 99908-7188"}</td>
                       <td className="p-4">
                         <select
                           value={u.roleCode || "CLIENT"}
@@ -752,10 +536,16 @@ export default function Admin() {
                           <option value="CLIENT">👤 CLIENT (Cliente Final)</option>
                         </select>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-4 text-right space-x-2">
+                        <button
+                          onClick={() => abrirModalEditarUsuario(u)}
+                          className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white font-bold rounded-lg transition"
+                        >
+                          ✏️ Editar Dados
+                        </button>
                         <button
                           onClick={() => handleExcluirUsuario(u.id, u.email)}
-                          className="px-3 py-1 bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 font-bold rounded-lg transition"
+                          className="px-3 py-1.5 bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 font-bold rounded-lg transition"
                         >
                           Excluir
                         </button>
@@ -767,25 +557,6 @@ export default function Admin() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ABA 8: Configurações */}
-      {abaAtiva === "configs" && (
-        <form onSubmit={handleSalvarSettings} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 shadow-xl max-w-2xl text-xs">
-          <h2 className="text-lg font-bold text-white border-b border-neutral-800 pb-3">⚙️ Configurações Globais</h2>
-          <div>
-            <label className="block text-neutral-300 font-semibold mb-1">Chave PIX Oficial *</label>
-            <input
-              type="text"
-              value={companySettings.pixKey}
-              onChange={(e) => setCompanySettings({ ...companySettings, pixKey: e.target.value })}
-              className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-sm font-mono text-emerald-400"
-            />
-          </div>
-          <button type="submit" className="py-3 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold rounded-xl shadow">
-            Salvar Configurações
-          </button>
-        </form>
       )}
 
       {/* MODAL CADASTRAR NOVO USUÁRIO */}
@@ -836,12 +607,12 @@ export default function Admin() {
               </div>
 
               <div>
-                <label className="block text-neutral-400 mb-1">Telefone / WhatsApp</label>
+                <label className="block text-neutral-400 mb-1">Telefone / WhatsApp *</label>
                 <input
                   type="text"
                   value={novoUserFone}
                   onChange={(e) => setNovoUserFone(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2.5 text-xs"
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2.5 text-xs font-bold text-emerald-400"
                 />
               </div>
 
@@ -872,6 +643,96 @@ export default function Admin() {
                   className="py-2 px-5 bg-helpusOrange text-white font-bold rounded-xl shadow"
                 >
                   Cadastrar Usuário
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDITAR DADOS DO USUÁRIO */}
+      {modalEditarUsuarioAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl my-8">
+            <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+              <h3 className="font-bold text-base text-white">✏️ Editar Usuário: {usuarioEditando?.name}</h3>
+              <button onClick={() => setModalEditarUsuarioAberto(false)} className="text-neutral-400 hover:text-white font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSalvarEdicaoUsuarioSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-neutral-400 mb-1">Nome Completo *</label>
+                <input
+                  type="text"
+                  required
+                  value={editUserNome}
+                  onChange={(e) => setEditUserNome(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2.5 text-xs font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">E-mail *</label>
+                <input
+                  type="email"
+                  required
+                  value={editUserEmail}
+                  onChange={(e) => setEditUserEmail(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2.5 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Telefone / WhatsApp *</label>
+                <input
+                  type="text"
+                  value={editUserFone}
+                  onChange={(e) => setEditUserFone(e.target.value)}
+                  placeholder="(83) 99908-7188"
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2.5 text-xs font-bold text-emerald-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Perfil de Acesso *</label>
+                <select
+                  value={editUserRole}
+                  onChange={(e) => setEditUserRole(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2.5 text-xs font-bold"
+                >
+                  <option value="DEVELOPER">👑 DEVELOPER (SuperAdmin Geral)</option>
+                  <option value="STORE_OWNER">🏢 STORE_OWNER (Dono/Gerente da Loja)</option>
+                  <option value="OPERATOR">👷 OPERATOR (Funcionário/Estoque)</option>
+                  <option value="CLIENT">👤 CLIENT (Cliente Final)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Redefinir Senha (opcional)</label>
+                <input
+                  type="password"
+                  placeholder="Deixe em branco para não alterar"
+                  value={editUserNovaSenha}
+                  onChange={(e) => setEditUserNovaSenha(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2.5 text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setModalEditarUsuarioAberto(false)}
+                  className="py-2 px-4 bg-neutral-800 text-neutral-300 rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="py-2 px-5 bg-helpusOrange text-white font-bold rounded-xl shadow"
+                >
+                  Salvar Alterações
                 </button>
               </div>
             </form>
@@ -918,31 +779,6 @@ export default function Admin() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-neutral-400 mb-1">Preço / Diária (R$) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={precoDiaria}
-                    onChange={(e) => setPrecoDiaria(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs font-bold text-helpusOrange"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-neutral-400 mb-1">Preço Semanal (R$)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={precoSemanal}
-                    onChange={(e) => setPrecoSemanal(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
-                  />
-                </div>
-              </div>
-
               <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
                 <button
                   type="button"
@@ -961,31 +797,6 @@ export default function Admin() {
             </form>
           </div>
         </div>
-      )}
-
-      {/* Modais de Impressão PDF */}
-      {contratoModalOrder && (
-        <ContratoPDF
-          order={contratoModalOrder}
-          companySettings={companySettings}
-          onClose={() => setContratoModalOrder(null)}
-        />
-      )}
-
-      {orcamentoModalOrder && (
-        <OrcamentoPDF
-          order={orcamentoModalOrder}
-          companySettings={companySettings}
-          onClose={() => setOrcamentoModalOrder(null)}
-        />
-      )}
-
-      {reciboModalOrder && (
-        <ReciboPDF
-          order={reciboModalOrder}
-          companySettings={companySettings}
-          onClose={() => setReciboModalOrder(null)}
-        />
       )}
     </div>
   );

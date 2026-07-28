@@ -158,3 +158,26 @@ export async function getMe(req, res) {
     return res.status(500).json({ error: 'Erro ao buscar dados do usuário.' });
   }
 }
+
+export async function updateProfile(req, res) {
+  try {
+    const userId = req.user.id;
+    const { name, phone, password } = req.body;
+
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (password) updateData.password = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { id: true, name: true, email: true, roleCode: true, phone: true, avatarUrl: true }
+    });
+
+    return res.json({ user: { ...user, role: user.roleCode } });
+  } catch (error) {
+    console.error('Erro ao atualizar perfil do usuário:', error);
+    return res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+  }
+}
