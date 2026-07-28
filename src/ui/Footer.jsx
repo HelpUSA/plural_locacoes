@@ -64,24 +64,27 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Linha inferior com crédito HelpUS */}
-      <div className="border-t border-neutral-800 py-5 text-center text-xs text-neutral-500">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-2">
+      {/* Linha inferior com selo oficial de desenvolvimento HelpUS */}
+      <div className="border-t border-neutral-800/80 py-5 text-center text-xs text-neutral-500">
+        <div className="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-4 gap-4">
           <span>© {new Date().getFullYear()} Plural Locações. Todos os direitos reservados.</span>
+
+          {/* Selo HelpUS */}
           <a
-            href="https://helpusa.com.br"
+            href="https://helpusbr.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 hover:text-helpusOrange transition-colors"
+            className="flex items-center gap-2.5 bg-neutral-900 border border-neutral-800 hover:border-helpusOrange/60 px-3.5 py-1.5 rounded-full transition group shadow-md"
+            title="Desenvolvido por HelpUS — Soluções Web & Software"
           >
             <img
-              src="/helpus-icon.png"
-              alt="HelpUS — Desenvolvimento Web"
-              className="w-5 h-5 rounded-full shadow-sm animate-fadeIn"
+              src="/helpus-logo.jpg"
+              alt="HelpUS — Desenvolvimento de Software"
+              className="w-6 h-6 rounded-full object-cover border border-neutral-700 group-hover:scale-105 transition shadow-sm"
               loading="lazy"
             />
-            <span>
-              Desenvolvido por <strong className="text-white font-semibold">HelpUS</strong>
+            <span className="text-[11px] text-neutral-400 group-hover:text-white font-medium">
+              Desenvolvido por <strong className="text-white font-bold group-hover:text-helpusOrange transition">HelpUS</strong>
             </span>
           </a>
         </div>

@@ -75,7 +75,7 @@ export default function DeveloperLicensingPanel({ orders = [], companySettings =
           </div>
           <button
             onClick={() => setStatusLicenca("ACTIVE")}
-            className="py-2 px-5 bg-black text-white font-black text-xs rounded-xl hover:bg-neutral-800 transition"
+            className="py-2 px-5 bg-black text-white font-black text-xs rounded-xl hover:bg-neutral-800 transition cursor-pointer"
           >
             Aprovar & Ativar Agora
           </button>
@@ -85,17 +85,24 @@ export default function DeveloperLicensingPanel({ orders = [], companySettings =
       {/* Header do Desenvolvedor */}
       <div className="bg-neutral-900 border border-helpusOrange/40 rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl relative overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="bg-helpusOrange text-white font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Exclusivo Desenvolvedor (SuperAdmin)
-              </span>
-              <span className="text-xs text-neutral-400 font-mono">Gestão de Licenças & Comissão</span>
+          <div className="flex items-center gap-3.5">
+            <img
+              src="/helpus-logo.jpg"
+              alt="HelpUS Software"
+              className="w-12 h-12 rounded-2xl border border-helpusOrange/50 object-cover shadow-xl"
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-helpusOrange text-white font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Desenvolvido por HelpUS Software
+                </span>
+                <span className="text-xs text-neutral-400 font-mono">Gestão de Licenças & Comissão</span>
+              </div>
+              <h2 className="text-3xl font-black text-white mt-1">Painel do Desenvolvedor & Parceria</h2>
+              <p className="text-neutral-400 text-xs sm:text-sm mt-1 max-w-2xl">
+                Acompanhamento do faturamento do site, cálculo da comissão percentual e controle do status de ativação/renovação do sistema.
+              </p>
             </div>
-            <h2 className="text-3xl font-black text-white mt-1">Painel do Desenvolvedor & Parceria</h2>
-            <p className="text-neutral-400 text-xs sm:text-sm mt-1 max-w-2xl">
-              Acompanhamento do faturamento do site, cálculo da comissão percentual e controle do status de ativação/renovação do sistema.
-            </p>
           </div>
 
           <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-800 text-right">
@@ -238,7 +245,7 @@ export default function DeveloperLicensingPanel({ orders = [], companySettings =
             <button
               type="submit"
               disabled={salvando}
-              className="py-3 px-8 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-xs rounded-xl shadow-lg transition"
+              className="py-3 px-8 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer"
             >
               {salvando ? "Salvando..." : "💾 Salvar Configurações de Licença"}
             </button>
