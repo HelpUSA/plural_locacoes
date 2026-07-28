@@ -5,12 +5,14 @@ import { Link } from "react-router-dom";
 import ContratoPDF from "../components/ContratoPDF.jsx";
 import OrcamentoPDF from "../components/OrcamentoPDF.jsx";
 import ReciboPDF from "../components/ReciboPDF.jsx";
+import HelpTooltip from "../components/HelpTooltip.jsx";
+import ManualSistemaERP from "../components/ManualSistemaERP.jsx";
 
 export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { user, token, isAdmin } = useAuth();
 
-  const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos", "categorias", "romaneio", "financeiro", "relatorios", "manutencao", "usuarios", "configs"
+  const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos", "categorias", "romaneio", "financeiro", "relatorios", "manutencao", "usuarios", "configs", "manual"
   const [pedidos, setPedidos] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [financeiroSummary, setFinanceiroSummary] = useState(null);
@@ -683,6 +685,17 @@ export default function Admin() {
           >
             ⚙️ Configurações
           </button>
+
+          <button
+            onClick={() => setAbaAtiva("manual")}
+            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "manual"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            📖 Manual & Treinamento
+          </button>
         </div>
       </div>
 
@@ -1127,6 +1140,9 @@ export default function Admin() {
           </button>
         </form>
       )}
+
+      {/* ABA 9: Manual & Treinamento */}
+      {abaAtiva === "manual" && <ManualSistemaERP />}
 
       {/* MODAL CADASTRAR NOVO USUÁRIO */}
       {modalUsuarioAberto && (

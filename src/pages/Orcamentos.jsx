@@ -3,6 +3,7 @@ import { useCart, BAIRROS_FRETE } from "../context/CartContext.jsx";
 import { useProducts } from "../context/ProductContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
+import HelpTooltip from "../components/HelpTooltip.jsx";
 
 export default function Orcamentos() {
   const { products } = useProducts();
@@ -169,7 +170,20 @@ export default function Orcamentos() {
         <span className="text-xs uppercase font-extrabold tracking-widest text-helpusOrange">
           Assistente Inteligente de Eventos
         </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-white">Faça Seu Orçamento Guiado</h1>
+        <h1 className="text-3xl sm:text-4xl font-black text-white flex items-center justify-center gap-2">
+          <span>Faça Seu Orçamento Guiado</span>
+          <HelpTooltip
+            titulo="Como Usar o Assistente Guiado"
+            explicacao="O assistente sugere automaticamente a quantidade ideal de mesas, cadeiras e tendas conforme o perfil e número de convidados do seu evento."
+            passos={[
+              "Passo 1: Selecione o tipo do evento e arraste a barra de convidados (ex: 100 pessoas)",
+              "Passo 2: Clique em 'Gerar Sugestão Automática' e ajuste os itens como desejar",
+              "Passo 3: Selecione o bairro em João Pessoa para cálculo do frete",
+              "Passo 4: Preencha seu nome/WhatsApp e clique em '⚡ Registrar Orçamento & Ver Comprovante'"
+            ]}
+            dica="O orçamento será gravado no sistema e um comprovante em PDF com QR Code PIX será gerado na hora."
+          />
+        </h1>
         <p className="text-neutral-400 text-xs sm:text-sm">
           Siga o passo a passo interativo. Nossa aplicação sugere a quantidade exata de mobília conforme seus convidados!
         </p>

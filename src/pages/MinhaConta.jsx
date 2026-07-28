@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart, BAIRROS_FRETE } from "../context/CartContext.jsx";
 import { Link, useNavigate } from "react-router-dom";
+import HelpTooltip from "../components/HelpTooltip.jsx";
 
 export default function MinhaConta() {
   const { user, logout, token } = useAuth();
@@ -200,7 +201,19 @@ export default function MinhaConta() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-white">Meus Orçamentos & Eventos</h2>
+            <h2 className="text-2xl font-black text-white flex items-center gap-2">
+              <span>Meus Orçamentos & Eventos</span>
+              <HelpTooltip
+                titulo="Área de Gerenciamento do Cliente"
+                explicacao="Aqui você acompanha o relatório visual dos equipamentos solicitados, linha do tempo de entrega e pode realizar alterações nas solicitações."
+                passos={[
+                  "Veja as fotos em alta definição dos equipamentos e valores por diária",
+                  "Clique em '✏️ Editar Pedido' para alterar as datas de entrega/devolução ou endereço",
+                  "Clique em '📄 Ver Comprovante PDF' para visualizar/imprimir a proposta comercial com QR Code PIX"
+                ]}
+                dica="Todas as edições feitas aqui atualizam imediatamente no painel dos atendentes da loja."
+              />
+            </h2>
             <p className="text-neutral-400 text-xs mt-0.5">
               Relatório visual completo das suas solicitações, fotos dos produtos e opção de edição.
             </p>

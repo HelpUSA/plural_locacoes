@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useProducts } from "../context/ProductContext.jsx";
 import ProductModal from "../components/ProductModal.jsx";
+import HelpTooltip from "../components/HelpTooltip.jsx";
 
 export default function Catalogo() {
   const { products, loading } = useProducts();
@@ -38,13 +39,10 @@ export default function Catalogo() {
     return products.filter((prod) => {
       // 1. Filtro por Departamento
       if (departamentoAtivo !== "todos") {
-        const depProd = (prod.departamento || "").toLowerCase();
-        if (!depProd.includes(departamentoAtivo.toLowerCase())) {
-          return false;
-        }
+        if (prod.departamento !== departamentoAtivo) return false;
       }
 
-      // 2. Filtro por Categoria (Fuzzy + Exato)
+      // 2. Filtro por Categoria Específica
       if (categoriaAtiva !== "todos") {
         const catProd = (prod.categoriaName || prod.categoria || "").toLowerCase();
         const catFiltro = categoriaAtiva.toLowerCase();
@@ -80,11 +78,11 @@ export default function Catalogo() {
     });
   }, [products, departamentoAtivo, categoriaAtiva, apenasKits, busca]);
 
-  // Agrupamento dos Produtos por Categoria para Exibição
-  const produtosAgrupados = useMemo(() => {
+  // Agrupamento por Categoria para exibição em Seções Organizadas
+  const produtosAgrupadosPorCategoria = useMemo(() => {
     const grupos = {};
     produtosFiltrados.forEach((prod) => {
-      const cat = prod.categoriaName || prod.categoria || "Geral";
+      const cat = prod.categoriaName || prod.categoria || "Equipamentos Gerais";
       if (!grupos[cat]) {
         grupos[cat] = [];
       }
@@ -100,8 +98,18 @@ export default function Catalogo() {
         <span className="text-xs uppercase font-extrabold tracking-widest text-helpusOrange">
           Catálogo Corporativo & Acervo
         </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-white">
-          Móveis, Tendas & Estruturas para Eventos
+        <h1 className="text-3xl sm:text-4xl font-black text-white flex items-center justify-center gap-2">
+          <span>Móveis, Tendas & Estruturas para Eventos</span>
+          <HelpTooltip
+            titulo="Como Usar o Catálogo"
+            explicacao="Navegue pelo acervo de equipamentos da Plural Locações, veja especificações técnicas de cada item e monte seu orçamento."
+            passos={[
+              "Use os filtros de departamentos para separar por Mobiliário, Coberturas ou Climatização",
+              "Clique em qualquer equipamento para ver dimensões, peso suportado e fotos de alta resolução",
+              "Adicione os itens desejados ao carrinho ou use o Assistente Guiado"
+            ]}
+            dica="Caso prefira que o sistema sugira a quantidade de mobília conforme seus convidados, clique em '⚡ Faça Seu Orçamento'."
+          />
         </h1>
         <p className="text-neutral-400 text-xs sm:text-sm">
           Selecione os equipamentos por departamento, confira as especificações técnicas e adicione ao seu carrinho de locação.
@@ -118,13 +126,13 @@ export default function Catalogo() {
               : "bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800"
           }`}
         >
-          ✨ Todo o Acervo ({products.length})
+          🌟 Todo o Acervo ({products.length})
         </button>
 
         <button
-          onClick={() => { setDepartamentoAtivo("mobiliario"); setCategoriaAtiva("todos"); setApenasKits(false); }}
+          onClick={() => { setDepartamentoAtivo("mobiliario-lounges"); setCategoriaAtiva("todos"); setApenasKits(false); }}
           className={`py-2.5 px-5 text-xs font-bold rounded-xl transition ${
-            departamentoAtivo === "mobiliario" && !apenasKits
+            departamentoAtivo === "mobiliario-lounges"
               ? "bg-helpusOrange text-white shadow-lg"
               : "bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800"
           }`}
@@ -133,185 +141,164 @@ export default function Catalogo() {
         </button>
 
         <button
-          onClick={() => { setDepartamentoAtivo("estruturas"); setCategoriaAtiva("todos"); setApenasKits(false); }}
+          onClick={() => { setDepartamentoAtivo("coberturas-estruturas"); setCategoriaAtiva("todos"); setApenasKits(false); }}
           className={`py-2.5 px-5 text-xs font-bold rounded-xl transition ${
-            departamentoAtivo === "estruturas" && !apenasKits
+            departamentoAtivo === "coberturas-estruturas"
               ? "bg-helpusOrange text-white shadow-lg"
               : "bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800"
           }`}
         >
-          ⛺ Estruturas & Climatização
+          ⛺ Coberturas & Tendas
         </button>
 
         <button
-          onClick={() => { setDepartamentoAtivo("todos"); setApenasKits(true); }}
+          onClick={() => { setDepartamentoAtivo("climatizacao-iluminacao"); setCategoriaAtiva("todos"); setApenasKits(false); }}
+          className={`py-2.5 px-5 text-xs font-bold rounded-xl transition ${
+            departamentoAtivo === "climatizacao-iluminacao"
+              ? "bg-helpusOrange text-white shadow-lg"
+              : "bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800"
+          }`}
+        >
+          ❄️ Climatização & Iluminação
+        </button>
+
+        <button
+          onClick={() => { setApenasKits(true); setDepartamentoAtivo("todos"); setCategoriaAtiva("todos"); }}
           className={`py-2.5 px-5 text-xs font-bold rounded-xl transition ${
             apenasKits
               ? "bg-helpusOrange text-white shadow-lg"
               : "bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800"
           }`}
         >
-          🎁 Kits & Ambientes (Combos)
+          🎁 Kits & Combos Prontos
         </button>
       </div>
 
-      {/* Busca e Filtro de Categorias Escalável */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-4 shadow-xl">
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-          {/* Busca Livre */}
-          <div className="w-full md:w-96">
-            <input
-              type="text"
-              placeholder="🔍 Buscar por nome, SKU, cor ou material..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-helpusOrange"
-            />
-          </div>
-
-          {/* Seletor Dropdown para grandes volumes de categorias */}
-          <div className="w-full md:w-auto flex items-center gap-2">
-            <span className="text-xs text-neutral-400 font-medium whitespace-nowrap">Filtrar Categoria:</span>
-            <select
-              value={categoriaAtiva}
-              onChange={(e) => setCategoriaAtiva(e.target.value)}
-              className="w-full md:w-64 bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-helpusOrange"
-            >
-              <option value="todos">✨ Todas as Categorias ({products.length} itens)</option>
-              {listaCategoriasDinamicas.map((cat) => (
-                <option key={cat.key} value={cat.key}>
-                  {cat.label} ({cat.count} itens)
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Chips/Pills em Carrossel Horizontal para Categorias */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-neutral-800/80 scrollbar-thin scrollbar-thumb-neutral-700">
-          <span className="text-[11px] text-neutral-500 font-medium whitespace-nowrap pr-1">Atalhos:</span>
-
+      {/* Barra de Filtros por Categoria & Busca por Nome/SKU */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        {/* Seletor de Categoria Específica */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
+          <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider whitespace-nowrap">
+            Filtro:
+          </span>
           <button
             onClick={() => setCategoriaAtiva("todos")}
-            className={`px-3 py-1.5 rounded-xl border text-xs whitespace-nowrap transition font-bold ${
+            className={`py-1.5 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
               categoriaAtiva === "todos"
-                ? "bg-helpusOrange text-white border-helpusOrange shadow"
-                : "border-neutral-800 text-neutral-400 hover:text-white bg-neutral-950"
+                ? "bg-neutral-800 text-helpusOrange font-bold border border-helpusOrange/40"
+                : "text-neutral-400 hover:text-white bg-neutral-950/60"
             }`}
           >
-            Todas
+            Todas ({produtosFiltrados.length})
           </button>
-
           {listaCategoriasDinamicas.map((cat) => (
             <button
               key={cat.key}
               onClick={() => setCategoriaAtiva(cat.key)}
-              className={`px-3 py-1.5 rounded-xl border text-xs whitespace-nowrap transition font-semibold flex items-center gap-1.5 ${
+              className={`py-1.5 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
                 categoriaAtiva === cat.key
-                  ? "bg-helpusOrange text-white border-helpusOrange shadow"
-                  : "border-neutral-800 text-neutral-400 hover:text-white bg-neutral-950"
+                  ? "bg-neutral-800 text-helpusOrange font-bold border border-helpusOrange/40"
+                  : "text-neutral-400 hover:text-white bg-neutral-950/60"
               }`}
             >
-              <span>{cat.label}</span>
-              <span className="opacity-60 text-[10px] font-mono">({cat.count})</span>
+              {cat.label} ({cat.count})
             </button>
           ))}
         </div>
+
+        {/* Input de Busca Livre */}
+        <div className="w-full sm:w-72 relative">
+          <input
+            type="text"
+            placeholder="Buscar por nome, SKU ou material..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-helpusOrange"
+          />
+          {busca && (
+            <button
+              onClick={() => setBusca("")}
+              className="absolute right-3 top-2 text-neutral-400 hover:text-white text-xs font-bold"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Exibição dos Produtos Agrupados por Categoria */}
+      {/* Exibição dos Produtos Agrupados por Seção */}
       {loading ? (
-        <div className="text-center py-16 text-neutral-400 text-sm">Carregando acervo corporativo...</div>
-      ) : produtosFiltrados.length === 0 ? (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-12 text-center text-neutral-400 text-xs space-y-2">
-          <div className="text-3xl">🔍</div>
-          <div className="font-bold text-white text-base">Nenhum equipamento encontrado</div>
-          <p>Tente ajustar os filtros ou o termo de busca.</p>
+        <div className="text-center py-16 space-y-3">
+          <div className="w-8 h-8 border-2 border-helpusOrange border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-neutral-400 text-xs">Carregando acervo corporativo da Plural...</p>
+        </div>
+      ) : Object.keys(produtosAgrupadosPorCategoria).length === 0 ? (
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-12 text-center space-y-4">
+          <div className="text-5xl opacity-40">🔍</div>
+          <h3 className="font-bold text-white text-lg">Nenhum equipamento encontrado</h3>
+          <p className="text-neutral-400 text-xs max-w-md mx-auto">
+            Não encontramos nenhum produto correspondente aos filtros selecionados. Tente limpar a busca ou selecionar outro departamento.
+          </p>
+          <button
+            onClick={() => { setDepartamentoAtivo("todos"); setCategoriaAtiva("todos"); setBusca(""); setApenasKits(false); }}
+            className="py-2.5 px-6 bg-helpusOrange text-white font-bold text-xs rounded-xl hover:bg-[#d64a28] transition shadow"
+          >
+            Limpar Todos os Filtros
+          </button>
         </div>
       ) : (
         <div className="space-y-10">
-          {Object.keys(produtosAgrupados).map((nomeCategoria) => (
+          {Object.entries(produtosAgrupadosPorCategoria).map(([nomeCategoria, prods]) => (
             <div key={nomeCategoria} className="space-y-4">
-              {/* Título da Categoria */}
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between border-b border-neutral-800/80 pb-2">
+                <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-helpusOrange"></span>
-                  <h2 className="text-xl font-bold text-white tracking-wide capitalize">
-                    {nomeCategoria.replace(/-/g, ' ')}
-                  </h2>
-                  <span className="text-xs text-neutral-500 font-mono font-bold">
-                    ({produtosAgrupados[nomeCategoria].length} itens)
-                  </span>
+                  <h2 className="text-xl font-extrabold text-white">{nomeCategoria}</h2>
+                  <span className="text-xs text-neutral-500 font-mono">({prods.length} {prods.length === 1 ? 'item' : 'itens'})</span>
                 </div>
-
-                <button
-                  onClick={() => setCategoriaAtiva(nomeCategoria)}
-                  className="text-xs text-helpusOrange font-bold hover:underline"
-                >
-                  Ver apenas esta categoria →
-                </button>
               </div>
 
-              {/* Grid de Cards da Categoria */}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {produtosAgrupados[nomeCategoria].map((prod) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {prods.map((prod) => (
                   <div
                     key={prod.id}
                     className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl hover:border-neutral-700 transition flex flex-col justify-between group"
                   >
-                    <div>
-                      {/* Imagem do Produto */}
-                      <div className="aspect-video w-full bg-neutral-950 overflow-hidden relative border-b border-neutral-800">
-                        <img
-                          src={prod.imagem}
-                          alt={prod.nome}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                        />
-                        {prod.isKit && (
-                          <span className="absolute top-3 left-3 bg-helpusOrange text-white font-extrabold text-[10px] uppercase px-2.5 py-1 rounded-md shadow">
-                            🎁 Kit Combo
-                          </span>
-                        )}
-                        <span className="absolute top-3 right-3 bg-black/70 backdrop-blur text-neutral-300 text-[10px] font-mono px-2 py-0.5 rounded border border-neutral-700">
-                          {prod.sku || "SKU"}
-                        </span>
-                      </div>
-
-                      {/* Conteúdo */}
-                      <div className="p-5 space-y-3">
-                        {prod.destaque && (
-                          <span className="text-[11px] text-helpusOrange font-bold block truncate">
-                            {prod.destaque}
-                          </span>
-                        )}
-                        <h3 className="font-bold text-white text-base leading-snug group-hover:text-helpusOrange transition">
-                          {prod.nome}
-                        </h3>
-                        <p className="text-neutral-400 text-xs line-clamp-2">{prod.descricao}</p>
-
-                        {/* Especificações resumidas */}
-                        <div className="flex flex-wrap gap-2 text-[11px] text-neutral-400 pt-1">
-                          {prod.dimensoes && <span className="bg-neutral-950 px-2 py-0.5 rounded border border-neutral-800">📐 {prod.dimensoes}</span>}
-                          {prod.cor && <span className="bg-neutral-950 px-2 py-0.5 rounded border border-neutral-800">🎨 {prod.cor}</span>}
-                        </div>
-                      </div>
+                    <div className="relative aspect-[16/11] overflow-hidden bg-neutral-950 cursor-pointer" onClick={() => setProdutoModal(prod)}>
+                      <img
+                        src={prod.imagem}
+                        alt={prod.nome}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        loading="lazy"
+                      />
+                      <span className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur text-helpusOrange border border-helpusOrange/40 text-[10px] font-extrabold px-2.5 py-1 rounded-full font-mono">
+                        {prod.sku}
+                      </span>
                     </div>
 
-                    {/* Rodapé e Preço */}
-                    <div className="p-5 pt-0 border-t border-neutral-800/60 mt-4 flex items-center justify-between">
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                       <div>
-                        <span className="text-[10px] text-neutral-500 block font-medium">Diária a partir de:</span>
-                        <span className="text-xl font-black text-white">
-                          {formatCurrency(prod.precoDiaria)}
-                        </span>
+                        <h3 className="text-base font-bold text-white line-clamp-1 cursor-pointer hover:text-helpusOrange transition" onClick={() => setProdutoModal(prod)}>
+                          {prod.nome}
+                        </h3>
+                        <p className="text-xs text-neutral-400 mt-1 line-clamp-2 leading-relaxed">
+                          {prod.descricao}
+                        </p>
                       </div>
 
-                      <button
-                        onClick={() => setProdutoModal(prod)}
-                        className="py-2 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-xs rounded-xl shadow transition"
-                      >
-                        Ver Ficha Técnica
-                      </button>
+                      <div className="pt-3 border-t border-neutral-800 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-neutral-500 uppercase font-semibold block">Valor Diária</span>
+                          <span className="text-lg font-black text-emerald-400">{formatCurrency(prod.precoDiaria)}</span>
+                        </div>
+
+                        <button
+                          onClick={() => setProdutoModal(prod)}
+                          className="py-2 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white text-xs font-bold rounded-xl shadow transition transform hover:scale-[1.02]"
+                        >
+                          Ver Detalhes 🔍
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -321,7 +308,7 @@ export default function Catalogo() {
         </div>
       )}
 
-      {/* Modal de Detalhes do Produto */}
+      {/* Modal de Detalhes Técnicos e Inclusão no Orçamento */}
       {produtoModal && (
         <ProductModal
           product={produtoModal}
