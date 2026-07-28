@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -19,7 +19,13 @@ const MenuLink = ({ to, children }) => (
 export default function Header() {
   const [open, setOpen] = useState(false);
   const { totalItensCount, openCart } = useCart();
-  const { user, isAuthenticated, isAdmin } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogoutClick = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-neutral-950/80 border-b border-neutral-800/80">
@@ -48,18 +54,31 @@ export default function Header() {
           {isAdmin && <MenuLink to="/admin">Admin ⚙️</MenuLink>}
         </nav>
 
-        {/* Ações (Login/Conta, Carrinho & WhatsApp) */}
+        {/* Ações (Login/Conta + Botão Sair, Carrinho & WhatsApp) */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Link
-              to="/minha-conta"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-semibold text-white hover:bg-neutral-800 transition"
-            >
-              <span className="w-6 h-6 rounded-lg bg-helpusOrange text-white flex items-center justify-center font-bold text-[11px]">
-                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-              </span>
-              <span className="hidden sm:inline line-clamp-1 max-w-[100px]">{user.name}</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/minha-conta"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-semibold text-white hover:bg-neutral-800 transition"
+                title="Acessar Minha Conta"
+              >
+                <span className="w-6 h-6 rounded-lg bg-helpusOrange text-white flex items-center justify-center font-bold text-[11px]">
+                  {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                </span>
+                <span className="hidden sm:inline line-clamp-1 max-w-[120px]">{user.name}</span>
+              </Link>
+
+              {/* Botão Visível de Sair da Conta */}
+              <button
+                onClick={handleLogoutClick}
+                className="px-2.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-red-950/70 border border-neutral-800 hover:border-red-800/80 text-xs font-semibold text-neutral-300 hover:text-red-300 transition flex items-center gap-1"
+                title="Sair da Conta"
+              >
+                <span>🚪</span>
+                <span className="hidden md:inline">Sair</span>
+              </button>
+            </div>
           ) : (
             <Link
               to="/login"
@@ -129,9 +148,21 @@ export default function Header() {
             Contato
           </NavLink>
           {isAuthenticated ? (
-            <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
-              Minha Conta 👤
-            </NavLink>
+            <div className="flex items-center justify-between py-2 border-t border-neutral-800">
+              <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="text-helpusOrange font-semibold">
+                Minha Conta ({user.name})
+              </NavLink>
+              <button
+                onClick={() => {
+                  logout();
+                  setOpen(false);
+                  navigate("/login");
+                }}
+                className="text-xs text-red-400 font-bold px-2.5 py-1 bg-red-950/60 rounded-lg border border-red-800"
+              >
+                🚪 Sair
+              </button>
+            </div>
           ) : (
             <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
               Entrar / Cadastrar 🔑
