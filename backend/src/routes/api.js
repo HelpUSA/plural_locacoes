@@ -39,7 +39,9 @@ router.patch('/admin/orders/:id/status', authenticateToken, requireAdmin, orderC
 
 // --- User Management Routes ---
 router.get('/admin/users', authenticateToken, requireAdmin, userController.getUsers);
+router.post('/admin/users', authenticateToken, requireAdmin, userController.createUser);
 router.patch('/admin/users/:id/role', authenticateToken, requireAdmin, userController.updateUserRole);
+router.delete('/admin/users/:id', authenticateToken, requireAdmin, userController.deleteUser);
 
 // --- ERP Financial Routes ---
 router.get('/admin/financial/summary', authenticateToken, requireAdmin, financialController.getFinancialSummary);

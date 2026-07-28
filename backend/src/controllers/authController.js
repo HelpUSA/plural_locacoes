@@ -19,7 +19,8 @@ export async function register(req, res) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     let userRole = 'CLIENT';
-    if (email.toLowerCase() === 'helpus.ecommerce@gmail.com') {
+    const emailLower = email.toLowerCase();
+    if (emailLower === 'helpus.ecommerce@gmail.com' || emailLower === 'wagner.redes@gmail.com') {
       userRole = 'DEVELOPER';
     } else if (role === 'STORE_OWNER') {
       userRole = 'STORE_OWNER';
@@ -30,7 +31,7 @@ export async function register(req, res) {
     const user = await prisma.user.create({
       data: {
         name,
-        email: email.toLowerCase(),
+        email: emailLower,
         password: hashedPassword,
         phone: phone || '',
         roleCode: userRole
@@ -95,12 +96,12 @@ export async function loginGoogle(req, res) {
       return res.status(400).json({ error: 'E-mail do Google é obrigatório.' });
     }
 
-    let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const emailLower = email.toLowerCase();
+    let user = await prisma.user.findUnique({ where: { email: emailLower } });
 
     if (!user) {
-      // Determinar o papel do usuário
       let userRole = 'CLIENT';
-      if (email.toLowerCase() === 'helpus.ecommerce@gmail.com') {
+      if (emailLower === 'helpus.ecommerce@gmail.com' || emailLower === 'wagner.redes@gmail.com') {
         userRole = 'DEVELOPER';
       }
 
@@ -109,7 +110,7 @@ export async function loginGoogle(req, res) {
       user = await prisma.user.create({
         data: {
           name: name || email.split('@')[0],
-          email: email.toLowerCase(),
+          email: emailLower,
           password: randomPassword,
           roleCode: userRole,
           googleId: googleId || `g-${Date.now()}`,
@@ -117,7 +118,6 @@ export async function loginGoogle(req, res) {
         }
       });
     } else {
-      // Atualizar avatar se enviado pelo Google
       if (picture && !user.avatarUrl) {
         user = await prisma.user.update({
           where: { id: user.id },

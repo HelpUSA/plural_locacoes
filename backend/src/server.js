@@ -21,17 +21,16 @@ app.use('/api', apiRoutes);
 
 async function ensureTaxonomySeed() {
   try {
-    const devUser = await prisma.user.findUnique({
-      where: { email: 'helpus.ecommerce@gmail.com' }
-    });
+    const devEmails = ['helpus.ecommerce@gmail.com', 'wagner.redes@gmail.com'];
+    const hashDevPassword = await bcrypt.hash('@dmLocal1993', 10);
 
-    if (!devUser) {
-      console.log('🌱 Criando conta SuperAdmin Desenvolvedor (helpus.ecommerce@gmail.com)...');
-      const hashDevPassword = await bcrypt.hash('@dmLocal1993', 10);
-      await prisma.user.create({
-        data: {
+    for (const email of devEmails) {
+      await prisma.user.upsert({
+        where: { email },
+        update: { roleCode: 'DEVELOPER' },
+        create: {
           name: 'Wagner (Desenvolvedor Geral)',
-          email: 'helpus.ecommerce@gmail.com',
+          email,
           password: hashDevPassword,
           phone: '(83) 99908-7188',
           roleCode: 'DEVELOPER'
@@ -104,7 +103,8 @@ async function ensureTaxonomySeed() {
         material: 'Polipropileno Virgem',
         dimensions: '40cm x 88cm x 42cm',
         maxWeight: 'INMETRO 180 kg',
-        highlight: '👑 Líder de Locações para Casamentos'
+        highlight: '👑 Líder de Locações para Casamentos',
+        status: 'ACTIVE'
       },
       {
         sku: 'CAD-TIF-02',
@@ -120,7 +120,8 @@ async function ensureTaxonomySeed() {
         material: 'Polipropileno Alta Densidade',
         dimensions: '40cm x 88cm x 42cm',
         maxWeight: '180 kg',
-        highlight: '✨ Acabamento Sem Encaixes'
+        highlight: '✨ Acabamento Sem Encaixes',
+        status: 'ACTIVE'
       },
       {
         sku: 'CAD-PAR-03',
@@ -136,7 +137,8 @@ async function ensureTaxonomySeed() {
         material: 'Resina Amadeirada com Fibra',
         dimensions: '42cm x 90cm x 45cm',
         maxWeight: '160 kg',
-        highlight: '🌿 Estilo Boho & Beach Wedding'
+        highlight: '🌿 Estilo Boho & Beach Wedding',
+        status: 'ACTIVE'
       },
       {
         sku: 'CAD-BIS-04',
@@ -152,7 +154,8 @@ async function ensureTaxonomySeed() {
         material: 'Polipropileno 100% Reciclável',
         dimensions: '52cm x 84cm x 54cm',
         maxWeight: 'INMETRO 182 kg',
-        highlight: '🛡️ Certificação de Segurança INMETRO'
+        highlight: '🛡️ Certificação de Segurança INMETRO',
+        status: 'ACTIVE'
       },
       {
         sku: 'CAD-BIS-05',
@@ -168,7 +171,8 @@ async function ensureTaxonomySeed() {
         material: 'Polipropileno Virgem',
         dimensions: '52cm x 84cm x 54cm',
         maxWeight: '182 kg',
-        highlight: '🖤 Design Moderno & Versátil'
+        highlight: '🖤 Design Moderno & Versátil',
+        status: 'ACTIVE'
       },
       {
         sku: 'CAD-DIO-06',
@@ -184,7 +188,8 @@ async function ensureTaxonomySeed() {
         material: 'Policarbonato Bayer UV',
         dimensions: '41cm x 92cm x 43cm',
         maxWeight: '150 kg',
-        highlight: '💎 Luxo Absoluto para Recepções'
+        highlight: '💎 Luxo Absoluto para Recepções',
+        status: 'ACTIVE'
       },
       {
         sku: 'CAD-TOL-07',
@@ -200,7 +205,8 @@ async function ensureTaxonomySeed() {
         material: 'Aço Carbono Estampado',
         dimensions: '44cm x 85cm x 45cm',
         maxWeight: '160 kg',
-        highlight: '🏭 Estilo Industrial & Urban'
+        highlight: '🏭 Estilo Industrial & Urban',
+        status: 'ACTIVE'
       },
       {
         sku: 'BAN-BIS-08',
@@ -216,7 +222,8 @@ async function ensureTaxonomySeed() {
         material: 'Aço Carbono com Epóxi',
         dimensions: '43cm x 94cm x 43cm (Assento 76cm)',
         maxWeight: '140 kg',
-        highlight: '🍸 Ideal para Bares & Coquetéis'
+        highlight: '🍸 Ideal para Bares & Coquetéis',
+        status: 'ACTIVE'
       },
       {
         sku: 'POL-LOU-09',
@@ -232,7 +239,8 @@ async function ensureTaxonomySeed() {
         material: 'Veludo Premium & Madeira Nobre',
         dimensions: '75cm x 82cm x 70cm',
         maxWeight: '150 kg',
-        highlight: '🛋️ Espaço VIP & Salão de Fotos'
+        highlight: '🛋️ Espaço VIP & Salão de Fotos',
+        status: 'ACTIVE'
       },
       {
         sku: 'MES-RED-11',
@@ -248,7 +256,8 @@ async function ensureTaxonomySeed() {
         material: 'Polipropileno com Proteção UV',
         dimensions: '90cm diâmetro x 72cm altura',
         maxWeight: '50 kg distribuídos',
-        highlight: '☀️ Suporte a Ombrelone'
+        highlight: '☀️ Suporte a Ombrelone',
+        status: 'ACTIVE'
       },
       {
         sku: 'MES-RED-12',
@@ -264,7 +273,8 @@ async function ensureTaxonomySeed() {
         material: 'Polietileno de Alta Densidade (PEAD) & Aço',
         dimensions: '152cm diâmetro x 74cm altura',
         maxWeight: '150 kg',
-        highlight: '👥 Acomoda 8 Convidados'
+        highlight: '👥 Acomoda 8 Convidados',
+        status: 'ACTIVE'
       },
       {
         sku: 'MES-RED-13',
@@ -280,7 +290,8 @@ async function ensureTaxonomySeed() {
         material: 'PEAD Virgem & Pés de Aço Tubular',
         dimensions: '183cm diâmetro x 74cm altura',
         maxWeight: '200 kg',
-        highlight: '🍽️ Acomoda 10 Convidados'
+        highlight: '🍽️ Acomoda 10 Convidados',
+        status: 'ACTIVE'
       },
       {
         sku: 'MES-PRAN-14',
@@ -296,7 +307,8 @@ async function ensureTaxonomySeed() {
         material: 'PEAD Tampo Inteiriço & Pés de Aço',
         dimensions: '200cm x 90cm x 74cm',
         maxWeight: '180 kg',
-        highlight: '🍲 Perfeita para Ilhas de Buffet'
+        highlight: '🍲 Perfeita para Ilhas de Buffet',
+        status: 'ACTIVE'
       },
       {
         sku: 'MES-BIS-15',
@@ -312,7 +324,8 @@ async function ensureTaxonomySeed() {
         material: 'Vidro Temperado 8mm & Aço Cromado',
         dimensions: '60cm diâmetro x 105cm altura',
         maxWeight: '40 kg',
-        highlight: '🍸 Ideal para Coquetel em Pé'
+        highlight: '🍸 Ideal para Coquetel em Pé',
+        status: 'ACTIVE'
       },
       {
         sku: 'TEN-PIR-19',
@@ -328,7 +341,8 @@ async function ensureTaxonomySeed() {
         material: 'Lona PVC TD1000 & Aço Galvanizado',
         dimensions: '5,00m x 5,00m (Pé direito 3,00m)',
         maxWeight: 'Proteção contra ventos até 60 km/h',
-        highlight: '☂️ Lona 100% Impermeável & Térmica'
+        highlight: '☂️ Lona 100% Impermeável & Térmica',
+        status: 'ACTIVE'
       },
       {
         sku: 'TEN-PIR-20',
@@ -344,7 +358,8 @@ async function ensureTaxonomySeed() {
         material: 'Lona PVC Reforçada & Estrutura Treliçada',
         dimensions: '10,00m x 10,00m (Pé direito 4,00m)',
         maxWeight: 'Capacidade até 120 convidados',
-        highlight: '🎪 Cobertura Total para Grandiosos Eventos'
+        highlight: '🎪 Cobertura Total para Grandiosos Eventos',
+        status: 'ACTIVE'
       },
       {
         sku: 'TEN-CRI-21',
@@ -360,7 +375,8 @@ async function ensureTaxonomySeed() {
         material: 'Lona PVC Cristal 0,60mm & Aço Galvanizado',
         dimensions: '10,00m x 10,00m',
         maxWeight: 'Efeito Panorâmico Noturno',
-        highlight: '🌌 Visão Céu Estrelado para Casamentos Noturnos'
+        highlight: '🌌 Visão Céu Estrelado para Casamentos Noturnos',
+        status: 'ACTIVE'
       },
       {
         sku: 'PIS-DAN-22',
@@ -376,7 +392,8 @@ async function ensureTaxonomySeed() {
         material: 'Compensado Naval 18mm & Revestimento Vinílico',
         dimensions: '5,00m x 5,00m (25m²)',
         maxWeight: 'Carga de impacto 500 kg/m²',
-        highlight: '🕺 O Centro da Festa de Casamento ou 15 Anos'
+        highlight: '🕺 O Centro da Festa de Casamento ou 15 Anos',
+        status: 'ACTIVE'
       },
       {
         sku: 'CLI-EVA-24',
@@ -392,7 +409,8 @@ async function ensureTaxonomySeed() {
         material: 'Polímero de Alta Resistência (220V)',
         dimensions: '65cm x 115cm x 42cm',
         maxWeight: 'Tanque de 45 L (Autonomia 8h)',
-        highlight: '❄️ Redução de até 8°C no Calor de João Pessoa'
+        highlight: '❄️ Redução de até 8°C no Calor de João Pessoa',
+        status: 'ACTIVE'
       },
       {
         sku: 'REF-LED-25',
@@ -408,7 +426,8 @@ async function ensureTaxonomySeed() {
         material: 'Alumínio Injetado (Bivolt)',
         dimensions: '22cm x 22cm x 15cm',
         maxWeight: 'Baixo Consumo LED',
-        highlight: '💡 Iluminação Decorativa de Ambientes'
+        highlight: '💡 Iluminação Decorativa de Ambientes',
+        status: 'ACTIVE'
       },
       {
         sku: 'KIT-PRA-28',
@@ -425,7 +444,8 @@ async function ensureTaxonomySeed() {
         material: 'Aço & Vidro Temperado',
         dimensions: 'Capacidade para 40 a 60 convidados',
         maxWeight: 'Economia de 20% no pacote',
-        highlight: '🔥 Mais Vendido para Aniversários & Happy Hour'
+        highlight: '🔥 Mais Vendido para Aniversários & Happy Hour',
+        status: 'ACTIVE'
       },
       {
         sku: 'KIT-CAS-29',
@@ -442,7 +462,8 @@ async function ensureTaxonomySeed() {
         material: 'Móveis Nobres Selecionados',
         dimensions: 'Atende 100 convidados sentados',
         maxWeight: 'Montagem e Frete Inclusos',
-        highlight: '💍 Pacote Completo para Cerimônia de Casamento'
+        highlight: '💍 Pacote Completo para Cerimônia de Casamento',
+        status: 'ACTIVE'
       }
     ];
 
