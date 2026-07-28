@@ -76,33 +76,34 @@ model Group {
 }
 
 model Product {
-  id           String         @id @default(uuid())
-  sku          String?        @unique // ex: CAD-TIF-BR-01
+  id           String           @id @default(uuid())
+  sku          String?          @unique // ex: CAD-TIF-BR-01
   name         String
   departmentId String?
-  department   Department?    @relation(fields: [departmentId], references: [id])
+  department   Department?      @relation(fields: [departmentId], references: [id])
   categoryId   String?
-  category     Category?      @relation(fields: [categoryId], references: [id])
+  category     Category?        @relation(fields: [categoryId], references: [id])
   groupId      String?
-  group        Group?         @relation(fields: [groupId], references: [id])
+  group        Group?           @relation(fields: [groupId], references: [id])
   priceDaily   Float
   priceWeekly  Float?
   image        String
-  galleryJSON  String?        // JSON Array de URLs adicionais
+  galleryJSON  String?          // JSON Array de URLs adicionais
   description  String
-  color        String?        // ex: "Branca", "Preta", "Madeira", "Dourada"
-  material     String?        // ex: "Polipropileno", "MDF", "Aço Carbono"
-  dimensions   String?        // ex: "1,20m x 75cm"
-  maxWeight    String?        // ex: "Até 182 kg"
-  specsJSON    String?        // JSON de especificações técnicas completas
-  stock        Int            @default(50)
-  status       String         @default("ACTIVE") // "ACTIVE", "INACTIVE", "MAINTENANCE"
+  color        String?          // ex: "Branca", "Preta", "Madeira", "Dourada"
+  material     String?          // ex: "Polipropileno", "MDF", "Aço Carbono"
+  dimensions   String?          // ex: "1,20m x 75cm"
+  maxWeight    String?          // ex: "Até 182 kg"
+  specsJSON    String?          // JSON de especificações técnicas completas
+  stock        Int              @default(50)
+  status       String           @default("ACTIVE") // "ACTIVE", "INACTIVE", "MAINTENANCE"
   highlight    String?
-  isKit        Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  isKit        Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   addons       ProductAddon[]
   orderItems   OrderItem[]
+  maintenances MaintenanceLog[]
 }
 
 model ProductAddon {
@@ -114,10 +115,10 @@ model ProductAddon {
 }
 
 model Order {
-  id            String               @id @default(uuid())
-  orderNumber   String               @unique // ex: ORD-2026-8921
+  id            String                 @id @default(uuid())
+  orderNumber   String                 @unique // ex: ORD-2026-8921
   userId        String?
-  user          User?                @relation(fields: [userId], references: [id])
+  user          User?                  @relation(fields: [userId], references: [id])
   clientName    String
   whatsapp      String
   startDate     String
@@ -127,14 +128,17 @@ model Order {
   address       String
   reference     String?
   notes         String?
-  status        String               @default("PENDING") // PENDING, APPROVED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, RETURNED, COMPLETED, CANCELLED
+  status        String                 @default("PENDING") // PENDING, APPROVED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, RETURNED, COMPLETED, CANCELLED
   subtotal      Float
   freightFee    Float
   totalPrice    Float
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  damagedNotes  String?                // Apontamento de avarias na devolução
+  damagedFee    Float                  @default(0) // Taxa cobrada por peças quebradas/faltantes
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
   items         OrderItem[]
   statusHistory OrderStatusHistory[]
+  financials    FinancialTransaction[]
 }
 
 model OrderItem {
@@ -155,4 +159,46 @@ model OrderStatusHistory {
   status    String
   comment   String?
   createdAt DateTime @default(now())
+}
+
+model FinancialTransaction {
+  id          String   @id @default(uuid())
+  description String
+  amount      Float
+  type        String   // "INCOME" (Entrada/Locação), "EXPENSE" (Saída/Despesa)
+  category    String   // "LOCACAO", "MANUTENCAO", "COMPRA_ACERVO", "FRETE", "CONTAS_FIXAS"
+  dueDate     String?
+  paidDate    String?
+  status      String   @default("PAID") // "PENDING", "PAID", "OVERDUE"
+  orderId     String?
+  order       Order?   @relation(fields: [orderId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model MaintenanceLog {
+  id               String   @id @default(uuid())
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id])
+  quantity         Int      @default(1)
+  issueDescription String
+  cost             Float    @default(0)
+  status           String   @default("IN_REPAIR") // "IN_REPAIR", "RESOLVED", "DISCARDED"
+  createdAt        DateTime @default(now())
+}
+
+model Supplier {
+  id            String   @id @default(uuid())
+  name          String
+  contactPerson String?
+  phone         String?
+  email         String?
+  category      String?  // "MOVEIS", "LONAS_TENDAS", "ENXOVAL", "FESTAS"
+  createdAt     DateTime @default(now())
+}
+
+model CompanySetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
 }

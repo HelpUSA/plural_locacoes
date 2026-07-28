@@ -3,6 +3,9 @@ import * as authController from '../controllers/authController.js';
 import * as productController from '../controllers/productController.js';
 import * as orderController from '../controllers/orderController.js';
 import * as userController from '../controllers/userController.js';
+import * as financialController from '../controllers/financialController.js';
+import * as maintenanceController from '../controllers/maintenanceController.js';
+import * as settingsController from '../controllers/settingsController.js';
 import { authenticateToken, requireAdmin } from '../middlewares/auth.js';
 
 const router = Router();
@@ -36,5 +39,20 @@ router.patch('/admin/orders/:id/status', authenticateToken, requireAdmin, orderC
 // --- User Management Routes ---
 router.get('/admin/users', authenticateToken, requireAdmin, userController.getUsers);
 router.patch('/admin/users/:id/role', authenticateToken, requireAdmin, userController.updateUserRole);
+
+// --- ERP Financial Routes ---
+router.get('/admin/financial/summary', authenticateToken, requireAdmin, financialController.getFinancialSummary);
+router.get('/admin/financial/transactions', authenticateToken, requireAdmin, financialController.getFinancialTransactions);
+router.post('/admin/financial/transactions', authenticateToken, requireAdmin, financialController.createFinancialTransaction);
+
+// --- ERP Maintenance & Supplier Routes ---
+router.get('/admin/maintenance', authenticateToken, requireAdmin, maintenanceController.getMaintenanceLogs);
+router.post('/admin/maintenance', authenticateToken, requireAdmin, maintenanceController.createMaintenanceLog);
+router.patch('/admin/maintenance/:id/status', authenticateToken, requireAdmin, maintenanceController.updateMaintenanceStatus);
+router.post('/admin/suppliers', authenticateToken, requireAdmin, maintenanceController.createSupplier);
+
+// --- ERP Company Settings Routes ---
+router.get('/admin/settings', settingsController.getCompanySettings);
+router.post('/admin/settings', authenticateToken, requireAdmin, settingsController.updateCompanySettings);
 
 export default router;
