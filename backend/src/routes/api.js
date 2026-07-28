@@ -6,6 +6,7 @@ import * as userController from '../controllers/userController.js';
 import * as financialController from '../controllers/financialController.js';
 import * as maintenanceController from '../controllers/maintenanceController.js';
 import * as settingsController from '../controllers/settingsController.js';
+import * as reportsController from '../controllers/reportsController.js';
 import { authenticateToken, requireAdmin } from '../middlewares/auth.js';
 
 const router = Router();
@@ -50,6 +51,11 @@ router.get('/admin/maintenance', authenticateToken, requireAdmin, maintenanceCon
 router.post('/admin/maintenance', authenticateToken, requireAdmin, maintenanceController.createMaintenanceLog);
 router.patch('/admin/maintenance/:id/status', authenticateToken, requireAdmin, maintenanceController.updateMaintenanceStatus);
 router.post('/admin/suppliers', authenticateToken, requireAdmin, maintenanceController.createSupplier);
+
+// --- ERP Reports & BI Routes ---
+router.get('/admin/reports/top-products', authenticateToken, requireAdmin, reportsController.getTopProductsReport);
+router.get('/admin/reports/neighborhood-revenue', authenticateToken, requireAdmin, reportsController.getNeighborhoodRevenueReport);
+router.get('/admin/reports/occupancy', authenticateToken, requireAdmin, reportsController.getOccupancyStats);
 
 // --- ERP Company Settings Routes ---
 router.get('/admin/settings', settingsController.getCompanySettings);
