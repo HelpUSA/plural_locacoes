@@ -37,11 +37,10 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Menu Desktop Enxuto e Focado */}
+        {/* Menu Desktop Unificado & Focado em Vendas */}
         <nav className="hidden md:flex items-center gap-2">
-          <MenuLink to="/catalogo">Catálogo</MenuLink>
-          <MenuLink to="/orcamentos">Orçamentos</MenuLink>
-          <MenuLink to="/como-funciona">Como Funciona</MenuLink>
+          <MenuLink to="/catalogo">📦 Catálogo</MenuLink>
+          <MenuLink to="/orcamentos">⚡ Faça Seu Orçamento</MenuLink>
           {isAdmin && <MenuLink to="/admin">Admin ⚙️</MenuLink>}
         </nav>
 
@@ -109,20 +108,17 @@ export default function Header() {
       {open && (
         <div className="md:hidden border-t border-neutral-800 bg-neutral-950 p-4 space-y-2 text-sm text-neutral-200">
           <NavLink to="/catalogo" onClick={() => setOpen(false)} className="block py-2">
-            Catálogo
+            📦 Catálogo
           </NavLink>
-          <NavLink to="/orcamentos" onClick={() => setOpen(false)} className="block py-2">
-            Orçamentos
-          </NavLink>
-          <NavLink to="/como-funciona" onClick={() => setOpen(false)} className="block py-2">
-            Como Funciona
+          <NavLink to="/orcamentos" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-bold">
+            ⚡ Faça Seu Orçamento
           </NavLink>
           {isAuthenticated ? (
-            <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
+            <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="block py-2 text-neutral-200 font-semibold">
               Minha Conta ({user.name})
             </NavLink>
           ) : (
-            <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
+            <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-neutral-200 font-semibold">
               Entrar / Cadastrar 🔑
             </NavLink>
           )}
