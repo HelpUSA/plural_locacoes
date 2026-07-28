@@ -2,71 +2,166 @@ import { prisma } from '../config/db.js';
 
 export async function getProducts(req, res) {
   try {
+    const { category, department, group, search, isKit } = req.query;
+
+    const where = { status: 'ACTIVE' };
+
+    if (category && category !== 'todos') {
+      where.OR = [
+        { category: { slug: category } },
+        { categoryId: category }
+      ];
+    }
+
+    if (department) {
+      where.department = { slug: department };
+    }
+
+    if (group) {
+      where.group = { slug: group };
+    }
+
+    if (isKit === 'true') {
+      where.isKit = true;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { sku: { contains: search } },
+        { description: { contains: search } },
+        { color: { contains: search } },
+        { material: { contains: search } }
+      ];
+    }
+
     const products = await prisma.product.findMany({
+      where,
+      include: {
+        department: true,
+        category: true,
+        group: true,
+        addons: true
+      },
       orderBy: { createdAt: 'desc' }
     });
+
     return res.json(products);
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
-    return res.status(500).json({ error: 'Erro ao listar produtos.' });
+    return res.status(500).json({ error: 'Erro ao carregar o catálogo de produtos.' });
   }
 }
 
 export async function getProductById(req, res) {
   try {
     const { id } = req.params;
-    const product = await prisma.product.findUnique({ where: { id } });
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        department: true,
+        category: true,
+        group: true,
+        addons: true
+      }
+    });
+
     if (!product) {
-      return res.status(404).json({ error: 'Produto não encontrado.' });
+      return res.status(404).json({ error: 'Equipamento não encontrado.' });
     }
+
     return res.json(product);
   } catch (error) {
-    return res.status(500).json({ error: 'Erro ao buscar detalhes do produto.' });
+    console.error('Erro ao buscar produto por ID:', error);
+    return res.status(500).json({ error: 'Erro ao carregar detalhes do produto.' });
   }
 }
 
 export async function createProduct(req, res) {
   try {
-    const { nome, categoria, precoDiaria, imagem, descricao, highlight, estoque } = req.body;
+    const {
+      sku,
+      name,
+      departmentId,
+      categoryId,
+      groupId,
+      priceDaily,
+      priceWeekly,
+      image,
+      galleryJSON,
+      description,
+      color,
+      material,
+      dimensions,
+      maxWeight,
+      specsJSON,
+      stock,
+      highlight,
+      isKit,
+      addons
+    } = req.body;
 
-    if (!nome || !categoria || precoDiaria === undefined) {
-      return res.status(400).json({ error: 'Nome, categoria e preço diária são obrigatórios.' });
+    if (!name || !priceDaily) {
+      return res.status(400).json({ error: 'Nome e Preço por Diária são obrigatórios.' });
     }
+
+    const generatedSku = sku || `SKU-${Date.now()}`;
 
     const product = await prisma.product.create({
       data: {
-        nome,
-        categoria,
-        precoDiaria: parseFloat(precoDiaria),
-        imagem: imagem || '/mesas-e-cadeiras-01.jpeg',
-        descricao: descricao || '',
+        sku: generatedSku,
+        name,
+        departmentId,
+        categoryId,
+        groupId,
+        priceDaily: parseFloat(priceDaily),
+        priceWeekly: priceWeekly ? parseFloat(priceWeekly) : null,
+        image: image || '/mesas-e-cadeiras-01.jpeg',
+        galleryJSON: galleryJSON ? JSON.stringify(galleryJSON) : null,
+        description: description || '',
+        color: color || '',
+        material: material || '',
+        dimensions: dimensions || '',
+        maxWeight: maxWeight || '',
+        specsJSON: typeof specsJSON === 'object' ? JSON.stringify(specsJSON) : specsJSON,
+        stock: parseInt(stock, 10) || 50,
         highlight: highlight || '',
-        estoque: parseInt(estoque, 10) || 50
-      }
+        isKit: !!isKit,
+        addons: addons && addons.length > 0 ? {
+          create: addons.map(a => ({ name: a.name, price: parseFloat(a.price) }))
+        } : undefined
+      },
+      include: { addons: true }
     });
 
     return res.status(201).json(product);
   } catch (error) {
     console.error('Erro ao criar produto:', error);
-    return res.status(500).json({ error: 'Erro ao cadastrar produto.' });
+    return res.status(500).json({ error: 'Erro ao cadastrar equipamento.' });
   }
 }
 
 export async function updateProduct(req, res) {
   try {
     const { id } = req.params;
-    const { nome, categoria, precoDiaria, imagem, descricao, highlight, estoque } = req.body;
+    const data = req.body;
 
     const updated = await prisma.product.update({
       where: { id },
       data: {
-        ...(nome && { nome }),
-        ...(categoria && { categoria }),
-        ...(precoDiaria !== undefined && { precoDiaria: parseFloat(precoDiaria) }),
-        ...(imagem && { imagem }),
-        ...(descricao !== undefined && { descricao }),
-        ...(highlight !== undefined && { highlight }),
-        ...(estoque !== undefined && { estoque: parseInt(estoque, 10) })
+        name: data.name,
+        priceDaily: data.priceDaily ? parseFloat(data.priceDaily) : undefined,
+        priceWeekly: data.priceWeekly ? parseFloat(data.priceWeekly) : undefined,
+        image: data.image,
+        description: data.description,
+        color: data.color,
+        material: data.material,
+        dimensions: data.dimensions,
+        maxWeight: data.maxWeight,
+        stock: data.stock ? parseInt(data.stock, 10) : undefined,
+        highlight: data.highlight,
+        isKit: data.isKit
       }
     });
 
@@ -80,10 +175,11 @@ export async function updateProduct(req, res) {
 export async function deleteProduct(req, res) {
   try {
     const { id } = req.params;
+
     await prisma.product.delete({ where: { id } });
-    return res.json({ message: 'Produto removido com sucesso.' });
+    return res.json({ message: 'Equipamento excluído com sucesso.' });
   } catch (error) {
-    console.error('Erro ao deletar produto:', error);
-    return res.status(500).json({ error: 'Erro ao remover produto.' });
+    console.error('Erro ao excluir produto:', error);
+    return res.status(500).json({ error: 'Erro ao excluir equipamento.' });
   }
 }

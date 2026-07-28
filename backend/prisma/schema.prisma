@@ -46,32 +46,63 @@ model Address {
   createdAt    DateTime @default(now())
 }
 
+model Department {
+  id         String     @id @default(uuid())
+  name       String
+  slug       String     @unique
+  icon       String?
+  categories Category[]
+  products   Product[]
+}
+
 model Category {
-  id       String    @id @default(uuid())
-  name     String
-  slug     String    @unique
-  icon     String?
-  products Product[]
+  id           String      @id @default(uuid())
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  name         String
+  slug         String      @unique
+  icon         String?
+  groups       Group[]
+  products     Product[]
+}
+
+model Group {
+  id         String    @id @default(uuid())
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  name       String
+  slug       String    @unique
+  products   Product[]
 }
 
 model Product {
-  id          String         @id @default(uuid())
-  name        String
-  categoryId  String?
-  category    Category?      @relation(fields: [categoryId], references: [id])
-  priceDaily  Float
-  priceWeekly Float?
-  image       String
-  galleryJSON String?        // JSON Array de URLs adicionais
-  description String
-  specsJSON   String?        // JSON de especificações (material, capacidade, dimensão)
-  stock       Int            @default(50)
-  status      String         @default("ACTIVE") // "ACTIVE", "INACTIVE", "MAINTENANCE"
-  highlight   String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  addons      ProductAddon[]
-  orderItems  OrderItem[]
+  id           String         @id @default(uuid())
+  sku          String?        @unique // ex: CAD-TIF-BR-01
+  name         String
+  departmentId String?
+  department   Department?    @relation(fields: [departmentId], references: [id])
+  categoryId   String?
+  category     Category?      @relation(fields: [categoryId], references: [id])
+  groupId      String?
+  group        Group?         @relation(fields: [groupId], references: [id])
+  priceDaily   Float
+  priceWeekly  Float?
+  image        String
+  galleryJSON  String?        // JSON Array de URLs adicionais
+  description  String
+  color        String?        // ex: "Branca", "Preta", "Madeira", "Dourada"
+  material     String?        // ex: "Polipropileno", "MDF", "Aço Carbono"
+  dimensions   String?        // ex: "1,20m x 75cm"
+  maxWeight    String?        // ex: "Até 182 kg"
+  specsJSON    String?        // JSON de especificações técnicas completas
+  stock        Int            @default(50)
+  status       String         @default("ACTIVE") // "ACTIVE", "INACTIVE", "MAINTENANCE"
+  highlight    String?
+  isKit        Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  addons       ProductAddon[]
+  orderItems   OrderItem[]
 }
 
 model ProductAddon {
