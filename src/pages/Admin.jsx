@@ -42,8 +42,11 @@ export default function Admin() {
 
   // Modais de Form
   const [modalProdutoAberto, setModalProdutoAberto] = useState(false);
+  const [modalDespesaAberto, setModalDespesaAberto] = useState(false);
+  const [modalManutencaoAberto, setModalManutencaoAberto] = useState(false);
   const [modalUsuarioAberto, setModalUsuarioAberto] = useState(false);
   const [modalEditarUsuarioAberto, setModalEditarUsuarioAberto] = useState(false);
+  const [modalVistoriaOrder, setModalVistoriaOrder] = useState(null);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
 
   // Form State Produto
@@ -64,6 +67,33 @@ export default function Admin() {
   const [destaque, setDestaque] = useState("");
   const [isKit, setIsKit] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
+
+  // Form State Categoria/Grupo
+  const [novaCatNome, setNovaCatNome] = useState("");
+  const [categoriasLocais, setCategoriasLocais] = useState([
+    { id: "c1", name: "Assentos & Cadeiras", department: "Mobiliário & Lounges" },
+    { id: "c2", name: "Mesas & Bancadas", department: "Mobiliário & Lounges" },
+    { id: "c3", name: "Tendas & Coberturas", department: "Estruturas & Climatização" },
+    { id: "c4", name: "Climatização & Iluminação", department: "Estruturas & Climatização" },
+    { id: "c5", name: "Mesa Posta & Panaria", department: "Gastronomia & Enxoval" },
+    { id: "c6", name: "Combos & Kits Prontos", department: "Kits & Sugestões de Ambientes" }
+  ]);
+
+  // States Form Despesa
+  const [despesaDesc, setDespesaDesc] = useState("");
+  const [despesaValor, setDespesaValor] = useState("");
+  const [despesaTipo, setDespesaTipo] = useState("EXPENSE");
+  const [despesaCat, setDespesaCat] = useState("MANUTENCAO");
+
+  // States Form Manutenção
+  const [manutProdId, setManutProdId] = useState("");
+  const [manutQtd, setManutQtd] = useState("1");
+  const [manutDesc, setManutDesc] = useState("");
+  const [manutCusto, setManutCusto] = useState("0");
+
+  // States Form Vistoria Retorno
+  const [damagedNotes, setDamagedNotes] = useState("");
+  const [damagedFee, setDamagedFee] = useState("0");
 
   // Form State Novo Usuário
   const [novoUserNome, setNovoUserNome] = useState("");
@@ -122,6 +152,65 @@ export default function Admin() {
     }
   };
 
+  const fetchFinanceiro = async () => {
+    setLoadingDados(true);
+    try {
+      const resSummary = await fetch(`${API_BASE}/admin/financial/summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (resSummary.ok) {
+        const data = await resSummary.json();
+        setFinanceiroSummary(data);
+        setTransacoes(data.recentTransactions || []);
+      }
+    } catch (e) {
+      console.warn("Erro ao buscar financeiro:", e);
+    } finally {
+      setLoadingDados(false);
+    }
+  };
+
+  const fetchRelatoriosBI = async () => {
+    setLoadingDados(true);
+    try {
+      const resTop = await fetch(`${API_BASE}/admin/reports/top-products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const resNeigh = await fetch(`${API_BASE}/admin/reports/neighborhood-revenue`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const resOcc = await fetch(`${API_BASE}/admin/reports/occupancy`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (resTop.ok) setTopProductsReport(await resTop.json());
+      if (resNeigh.ok) setNeighborhoodReport(await resNeigh.json());
+      if (resOcc.ok) setOccupancyReport(await resOcc.json());
+    } catch (e) {
+      console.warn("Erro ao carregar relatórios BI:", e);
+    } finally {
+      setLoadingDados(false);
+    }
+  };
+
+  const fetchManutencao = async () => {
+    setLoadingDados(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/maintenance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setManutencoes(data.logs || []);
+        setFornecedores(data.suppliers || []);
+      }
+    } catch (e) {
+      console.warn("Erro ao buscar manutenção:", e);
+    } finally {
+      setLoadingDados(false);
+    }
+  };
+
   const fetchSettings = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/settings`);
@@ -136,11 +225,16 @@ export default function Admin() {
 
   useEffect(() => {
     fetchSettings();
+    fetchPedidos();
+    fetchUsuarios();
   }, []);
 
   useEffect(() => {
     if (abaAtiva === "romaneio") fetchPedidos();
     if (abaAtiva === "usuarios") fetchUsuarios();
+    if (abaAtiva === "financeiro") fetchFinanceiro();
+    if (abaAtiva === "relatorios") fetchRelatoriosBI();
+    if (abaAtiva === "manutencao") fetchManutencao();
   }, [abaAtiva]);
 
   const abrirModalCriarProduto = () => {
@@ -340,6 +434,134 @@ export default function Admin() {
     }
   };
 
+  const handleCadastrarCategoriaSubmit = (e) => {
+    e.preventDefault();
+    if (!novaCatNome.trim()) return;
+
+    const nova = {
+      id: `c-${Date.now()}`,
+      name: novaCatNome,
+      department: "Mobiliário & Lounges"
+    };
+
+    setCategoriasLocais(prev => [...prev, nova]);
+    setNovaCatNome("");
+    alert(`Categoria "${novaCatNome}" criada com sucesso!`);
+  };
+
+  const handleMudarStatusPedido = async (orderId, novoStatus) => {
+    try {
+      await fetch(`${API_BASE}/admin/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: novoStatus })
+      });
+    } catch (e) {
+      console.warn("Mudar status offline:", e);
+    }
+
+    setPedidos((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: novoStatus } : o))
+    );
+  };
+
+  const handleSalvarVistoria = async (e) => {
+    e.preventDefault();
+    if (!modalVistoriaOrder) return;
+
+    try {
+      await fetch(`${API_BASE}/admin/orders/${modalVistoriaOrder.id}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: "RETURNED",
+          comment: `Vistoria de Retorno realizada. Avarias: ${damagedNotes}. Taxa: R$ ${damagedFee}`
+        })
+      });
+
+      if (parseFloat(damagedFee) > 0) {
+        await fetch(`${API_BASE}/admin/financial/transactions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            description: `Taxa de Avaria/Quebra - Pedido #${modalVistoriaOrder.orderNumber || modalVistoriaOrder.id}`,
+            amount: parseFloat(damagedFee),
+            type: "INCOME",
+            category: "AVARIAS"
+          })
+        });
+      }
+
+      setPedidos((prev) =>
+        prev.map((o) => (o.id === modalVistoriaOrder.id ? { ...o, status: "RETURNED", damagedNotes, damagedFee: parseFloat(damagedFee) } : o))
+      );
+
+      setModalVistoriaOrder(null);
+      alert("Vistoria de Retorno e Romaneio salvos com sucesso!");
+    } catch (e) {
+      alert("Erro ao salvar vistoria.");
+    }
+  };
+
+  const handleSalvarDespesa = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/admin/financial/transactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          description: despesaDesc,
+          amount: parseFloat(despesaValor),
+          type: despesaTipo,
+          category: despesaCat
+        })
+      });
+
+      if (res.ok) {
+        const newTrans = await res.json();
+        setTransacoes(prev => [newTrans, ...prev]);
+        fetchFinanceiro();
+        setModalDespesaAberto(false);
+        setDespesaDesc("");
+        setDespesaValor("");
+      }
+    } catch (e) {
+      alert("Erro ao registrar lançamento.");
+    }
+  };
+
+  const handleSalvarSettings = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/admin/settings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(companySettings)
+      });
+
+      if (res.ok) {
+        alert("Configurações da empresa salvas com sucesso!");
+      }
+    } catch (e) {
+      alert("Erro ao salvar configurações.");
+    }
+  };
+
   if (!isAdmin && user?.role !== "ADMIN" && user?.role !== "DEVELOPER") {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
@@ -368,11 +590,11 @@ export default function Admin() {
           </span>
           <h1 className="text-3xl font-black text-white">Painel de Gestão Plural Locações</h1>
           <p className="text-neutral-400 text-sm">
-            Gestão de orçamentos, recibos, contratos PDF, relatórios BI e edição completa de usuários.
+            Gestão de orçamentos, recibos, contratos PDF, relatórios BI, controle financeiro e usuários.
           </p>
         </div>
 
-        {/* Abas ERP */}
+        {/* Todas as 8 Abas ERP Reativadas */}
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setAbaAtiva("produtos")}
@@ -383,6 +605,17 @@ export default function Admin() {
             }`}
           >
             📦 Catálogo ({products.length})
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva("categorias")}
+            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "categorias"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            🏷️ Categorias & Grupos
           </button>
 
           <button
@@ -397,6 +630,39 @@ export default function Admin() {
           </button>
 
           <button
+            onClick={() => setAbaAtiva("financeiro")}
+            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "financeiro"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            💰 Financeiro
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva("relatorios")}
+            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "relatorios"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            📊 Relatórios BI
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva("manutencao")}
+            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "manutencao"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            👨‍🔧 Manutenção
+          </button>
+
+          <button
             onClick={() => setAbaAtiva("usuarios")}
             className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
               abaAtiva === "usuarios"
@@ -405,6 +671,17 @@ export default function Admin() {
             }`}
           >
             👥 Usuários ({usuarios.length})
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva("configs")}
+            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "configs"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            ⚙️ Configurações
           </button>
         </div>
       </div>
@@ -476,6 +753,279 @@ export default function Admin() {
                           Excluir
                         </button>
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA 2: Categorias & Grupos */}
+      {abaAtiva === "categorias" && (
+        <div className="space-y-6">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 shadow-xl">
+            <h2 className="text-lg font-bold text-white border-b border-neutral-800 pb-3">🏷️ Gestão de Categorias e Grupos</h2>
+            
+            <form onSubmit={handleCadastrarCategoriaSubmit} className="flex gap-3 max-w-md">
+              <input
+                type="text"
+                required
+                placeholder="Nova Categoria (Ex: Iluminação Cênica)"
+                value={novaCatNome}
+                onChange={(e) => setNovaCatNome(e.target.value)}
+                className="flex-1 bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-xs"
+              />
+              <button type="submit" className="py-2 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-xs rounded-xl shadow">
+                + Adicionar Categoria
+              </button>
+            </form>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+              {categoriasLocais.map((c) => (
+                <div key={c.id} className="p-4 bg-neutral-950 border border-neutral-800 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-white text-sm">{c.name}</span>
+                    <span className="text-[10px] text-neutral-500 font-mono">ID: {c.id}</span>
+                  </div>
+                  <div className="text-xs text-helpusOrange font-semibold">{c.department}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA 3: Romaneio & Documentos */}
+      {abaAtiva === "romaneio" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold text-white">Romaneio de Entrega, Retorno e Emissão de Documentos PDF</h2>
+          </div>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-neutral-300">
+                <thead className="bg-neutral-950 text-neutral-400 uppercase font-semibold border-b border-neutral-800">
+                  <tr>
+                    <th className="p-4">Nº Pedido</th>
+                    <th className="p-4">Cliente</th>
+                    <th className="p-4">Período Evento</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-center">Documentos PDF</th>
+                    <th className="p-4 text-right">Vistoria / Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800/60">
+                  {pedidos.map((o) => (
+                    <tr key={o.id} className="hover:bg-neutral-950/50 transition">
+                      <td className="p-4 font-mono font-bold text-helpusOrange">
+                        #{o.orderNumber || o.id.slice(0, 8)}
+                      </td>
+                      <td className="p-4">
+                        <div className="font-bold text-white">{o.customerName}</div>
+                        <div className="text-[11px] text-neutral-500">{o.customerPhone}</div>
+                      </td>
+                      <td className="p-4">
+                        <div>{new Date(o.eventStartDate).toLocaleDateString("pt-BR")} até {new Date(o.eventEndDate).toLocaleDateString("pt-BR")}</div>
+                      </td>
+                      <td className="p-4">
+                        <select
+                          value={o.status}
+                          onChange={(e) => handleMudarStatusPedido(o.id, e.target.value)}
+                          className="bg-neutral-950 border border-neutral-700 text-white rounded-lg px-2 py-1 text-xs font-bold"
+                        >
+                          <option value="PRE_RESERVED">📋 Pré-Reserva (Orçamento)</option>
+                          <option value="CONFIRMED">✅ Confirmado (Sinal 30% Pago)</option>
+                          <option value="OUT_FOR_DELIVERY">🚚 Saiu para Entrega</option>
+                          <option value="DELIVERED">📍 Entregue no Local</option>
+                          <option value="RETURNED">🏁 Devolvido / Vistoriado</option>
+                          <option value="CANCELLED">❌ Cancelado</option>
+                        </select>
+                      </td>
+                      <td className="p-4 text-center space-x-1">
+                        <button
+                          onClick={() => setOrcamentoModalOrder(o)}
+                          className="py-1 px-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold rounded-lg transition text-[11px]"
+                        >
+                          📄 Orçamento
+                        </button>
+                        <button
+                          onClick={() => setContratoModalOrder(o)}
+                          className="py-1 px-2.5 bg-neutral-800 hover:bg-neutral-700 text-amber-400 font-bold rounded-lg transition text-[11px]"
+                        >
+                          📜 Contrato A4
+                        </button>
+                        <button
+                          onClick={() => setReciboModalOrder(o)}
+                          className="py-1 px-2.5 bg-neutral-800 hover:bg-neutral-700 text-emerald-400 font-bold rounded-lg transition text-[11px]"
+                        >
+                          🧾 Recibo
+                        </button>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => setModalVistoriaOrder(o)}
+                          className="py-1.5 px-3 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-600/60 text-amber-300 font-bold rounded-lg transition text-xs"
+                        >
+                          🔍 Vistoria de Retorno
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA 4: Financeiro */}
+      {abaAtiva === "financeiro" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-xl">
+              <span className="text-xs text-neutral-400 font-semibold uppercase">Faturamento Bruto</span>
+              <div className="text-2xl font-black text-emerald-400 mt-1">
+                {formatCurrency(financeiroSummary?.totalRevenue || 0)}
+              </div>
+            </div>
+
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-xl">
+              <span className="text-xs text-neutral-400 font-semibold uppercase">Total Despesas</span>
+              <div className="text-2xl font-black text-rose-400 mt-1">
+                {formatCurrency(financeiroSummary?.totalExpenses || 0)}
+              </div>
+            </div>
+
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-xl">
+              <span className="text-xs text-neutral-400 font-semibold uppercase">Resultado Líquido</span>
+              <div className="text-2xl font-black text-helpusOrange mt-1">
+                {formatCurrency(financeiroSummary?.netProfit || 0)}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center pt-4">
+            <h3 className="font-bold text-white text-base">Extrato de Transações Financeiras</h3>
+            <button
+              onClick={() => setModalDespesaAberto(true)}
+              className="py-2 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-xs rounded-xl shadow transition"
+            >
+              + Lançar Receita / Despesa 💰
+            </button>
+          </div>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-neutral-300">
+                <thead className="bg-neutral-950 text-neutral-400 uppercase font-semibold border-b border-neutral-800">
+                  <tr>
+                    <th className="p-4">Descrição</th>
+                    <th className="p-4">Categoria</th>
+                    <th className="p-4">Tipo</th>
+                    <th className="p-4 text-right">Valor</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800/60">
+                  {transacoes.map((t) => (
+                    <tr key={t.id}>
+                      <td className="p-4 font-bold text-white">{t.description}</td>
+                      <td className="p-4 text-neutral-400">{t.category}</td>
+                      <td className="p-4">
+                        <span className={`font-bold px-2 py-0.5 rounded text-[10px] ${t.type === 'INCOME' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'}`}>
+                          {t.type === 'INCOME' ? 'RECEITA' : 'DESPESA'}
+                        </span>
+                      </td>
+                      <td className={`p-4 text-right font-bold ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {formatCurrency(t.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA 5: Relatórios BI */}
+      {abaAtiva === "relatorios" && (
+        <div className="space-y-6">
+          <h2 className="text-lg font-bold text-white">Central de Inteligência de Negócios (BI)</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-xl">
+              <h3 className="font-bold text-white text-sm border-b border-neutral-800 pb-2">
+                🏆 Top Equipamentos Mais Alugados
+              </h3>
+              <div className="space-y-3">
+                {topProductsReport.map((p, idx) => (
+                  <div key={p.productId} className="flex justify-between items-center text-xs p-2 bg-neutral-950 rounded-xl border border-neutral-800">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-helpusOrange font-mono w-5">#{idx + 1}</span>
+                      <span className="font-bold text-white">{p.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-emerald-400">{p.totalRentedQuantity} unidades</div>
+                      <div className="text-[10px] text-neutral-500">{formatCurrency(p.totalRevenue)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-xl">
+              <h3 className="font-bold text-white text-sm border-b border-neutral-800 pb-2">
+                📍 Faturamento por Bairro (João Pessoa)
+              </h3>
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                {neighborhoodReport.map((n) => (
+                  <div key={n.neighborhood} className="flex justify-between items-center text-xs p-2 bg-neutral-950 rounded-xl border border-neutral-800">
+                    <div>
+                      <div className="font-bold text-white">{n.neighborhood}</div>
+                      <div className="text-[10px] text-neutral-500">{n.ordersCount} reservas realizadas</div>
+                    </div>
+                    <div className="font-bold text-helpusOrange text-sm">
+                      {formatCurrency(n.totalRevenue)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA 6: Manutenção */}
+      {abaAtiva === "manutencao" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold text-white">Controle de Manutenção do Acervo</h2>
+          </div>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-neutral-800 font-bold text-white text-sm">
+              Itens em Reparo
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-neutral-300">
+                <thead className="bg-neutral-950 text-neutral-400 uppercase font-semibold border-b border-neutral-800">
+                  <tr>
+                    <th className="p-4">Equipamento</th>
+                    <th className="p-4">Qtd</th>
+                    <th className="p-4">Motivo</th>
+                    <th className="p-4">Custo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800/60">
+                  {manutencoes.map((m) => (
+                    <tr key={m.id}>
+                      <td className="p-4 font-bold text-white">{m.product?.name}</td>
+                      <td className="p-4 font-bold">{m.quantity} un</td>
+                      <td className="p-4 text-neutral-300">{m.issueDescription}</td>
+                      <td className="p-4 font-bold text-amber-400">{formatCurrency(m.cost)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -557,6 +1107,25 @@ export default function Admin() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ABA 8: Configurações */}
+      {abaAtiva === "configs" && (
+        <form onSubmit={handleSalvarSettings} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 shadow-xl max-w-2xl text-xs">
+          <h2 className="text-lg font-bold text-white border-b border-neutral-800 pb-3">⚙️ Configurações Globais</h2>
+          <div>
+            <label className="block text-neutral-300 font-semibold mb-1">Chave PIX Oficial *</label>
+            <input
+              type="text"
+              value={companySettings.pixKey}
+              onChange={(e) => setCompanySettings({ ...companySettings, pixKey: e.target.value })}
+              className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-sm font-mono text-emerald-400"
+            />
+          </div>
+          <button type="submit" className="py-3 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-bold rounded-xl shadow">
+            Salvar Configurações
+          </button>
+        </form>
       )}
 
       {/* MODAL CADASTRAR NOVO USUÁRIO */}
@@ -797,6 +1366,31 @@ export default function Admin() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modais de Impressão PDF */}
+      {contratoModalOrder && (
+        <ContratoPDF
+          order={contratoModalOrder}
+          companySettings={companySettings}
+          onClose={() => setContratoModalOrder(null)}
+        />
+      )}
+
+      {orcamentoModalOrder && (
+        <OrcamentoPDF
+          order={orcamentoModalOrder}
+          companySettings={companySettings}
+          onClose={() => setOrcamentoModalOrder(null)}
+        />
+      )}
+
+      {reciboModalOrder && (
+        <ReciboPDF
+          order={reciboModalOrder}
+          companySettings={companySettings}
+          onClose={() => setReciboModalOrder(null)}
+        />
       )}
     </div>
   );
