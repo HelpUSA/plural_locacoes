@@ -11,6 +11,7 @@ export default function Orcamentos() {
 
   const {
     cartItems,
+    addItem,
     addToCart,
     dataInicio,
     setDataInicio,
@@ -27,6 +28,8 @@ export default function Orcamentos() {
     removeItem,
     updateQuantity
   } = useCart();
+
+  const addProductToCart = addItem || addToCart;
 
   // Estado do Wizard Guiado (Passos 1 a 4)
   const [passoAtual, setPassoAtual] = useState(1);
@@ -59,32 +62,62 @@ export default function Orcamentos() {
 
   // Função de Sugestão Automática de Equipamentos baseada em Convidados
   const aplicarSugestaoAutomatica = () => {
-    // Limpar itens anteriores do carrinho para aplicar a nova sugestão
-    clearCart();
+    try {
+      clearCart();
 
-    const qtdMesas = Math.ceil(qtdConvidados / 10);
-    const qtdCadeiras = qtdConvidados;
+      const qtdMesas = Math.ceil(qtdConvidados / 10);
+      const qtdCadeiras = qtdConvidados;
 
-    if (tipoEvento === "casamento") {
-      const mesa = products.find((p) => p.nome.toLowerCase().includes("redonda")) || products[0];
-      const cadeira = products.find((p) => p.nome.toLowerCase().includes("tiffany")) || products[1];
-      const tenda = products.find((p) => p.nome.toLowerCase().includes("tenda")) || products[2];
+      const mesaRef =
+        (products && products.find((p) => (p.nome || p.name || "").toLowerCase().includes("redonda"))) ||
+        (products && products[0]) || {
+          id: "mesa-redonda-default",
+          sku: "MES-RED-120",
+          nome: "Mesa Redonda 1,20m Nobre",
+          precoDiaria: 40.0,
+          imagem: "/mesas-e-cadeiras-01.jpeg"
+        };
 
-      if (mesa) addToCart(mesa, qtdMesas, []);
-      if (cadeira) addToCart(cadeira, qtdCadeiras, []);
-      if (tenda && qtdConvidados > 40) addToCart(tenda, 1, []);
-    } else if (tipoEvento === "coquetel") {
-      const bistro = products.find((p) => p.nome.toLowerCase().includes("bistrô")) || products[0];
-      if (bistro) addToCart(bistro, Math.ceil(qtdConvidados / 4), []);
-    } else {
-      const mesa = products.find((p) => p.nome.toLowerCase().includes("retangular")) || products[0];
-      const cadeira = products.find((p) => p.nome.toLowerCase().includes("tolix") || p.nome.toLowerCase().includes("cadeira")) || products[1];
-      if (mesa) addToCart(mesa, Math.ceil(qtdConvidados / 6), []);
-      if (cadeira) addToCart(cadeira, qtdCadeiras, []);
+      const cadeiraRef =
+        (products && products.find((p) => (p.nome || p.name || "").toLowerCase().includes("tiffany"))) ||
+        (products && products[1]) || {
+          id: "cadeira-tiffany-default",
+          sku: "CAD-TIF-01",
+          nome: "Cadeira Tiffany Dourada",
+          precoDiaria: 12.0,
+          imagem: "/mesas-e-cadeiras-02.jpeg"
+        };
+
+      const tendaRef =
+        (products && products.find((p) => (p.nome || p.name || "").toLowerCase().includes("tenda"))) ||
+        (products && products[2]) || {
+          id: "tenda-piramidal-default",
+          sku: "TEN-PIR-66",
+          nome: "Tenda Piramidal 6x6m",
+          precoDiaria: 350.0,
+          imagem: "/mesas-e-cadeiras-03.jpeg"
+        };
+
+      if (tipoEvento === "casamento") {
+        if (mesaRef) addProductToCart(mesaRef, qtdMesas, []);
+        if (cadeiraRef) addProductToCart(cadeiraRef, qtdCadeiras, []);
+        if (tendaRef && qtdConvidados >= 40) addProductToCart(tendaRef, 1, []);
+      } else if (tipoEvento === "coquetel") {
+        const bistroRef =
+          (products && products.find((p) => (p.nome || p.name || "").toLowerCase().includes("bistrô"))) || mesaRef;
+        if (bistroRef) addProductToCart(bistroRef, Math.ceil(qtdConvidados / 4), []);
+      } else {
+        const retangularRef =
+          (products && products.find((p) => (p.nome || p.name || "").toLowerCase().includes("retangular"))) || mesaRef;
+        if (retangularRef) addProductToCart(retangularRef, Math.ceil(qtdConvidados / 6), []);
+        if (cadeiraRef) addProductToCart(cadeiraRef, qtdCadeiras, []);
+      }
+    } catch (e) {
+      console.error("Erro ao aplicar sugestão automática:", e);
+    } finally {
+      // Garantir avanço para a etapa 2
+      setPassoAtual(2);
     }
-
-    // Avançar para a etapa de personalização do acervo
-    setPassoAtual(2);
   };
 
   const handleFinalizarSubmit = async (e) => {
@@ -147,7 +180,7 @@ export default function Orcamentos() {
         <div className="grid grid-cols-4 gap-2 text-center text-xs">
           <div
             onClick={() => setPassoAtual(1)}
-            className={`py-2 px-1 rounded-xl cursor-pointer font-bold transition border ${
+            className={`py-2.5 px-1 rounded-xl cursor-pointer font-bold transition border ${
               passoAtual === 1
                 ? "bg-helpusOrange text-white border-helpusOrange shadow-lg"
                 : "bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white"
@@ -157,7 +190,7 @@ export default function Orcamentos() {
           </div>
           <div
             onClick={() => setPassoAtual(2)}
-            className={`py-2 px-1 rounded-xl cursor-pointer font-bold transition border ${
+            className={`py-2.5 px-1 rounded-xl cursor-pointer font-bold transition border ${
               passoAtual === 2
                 ? "bg-helpusOrange text-white border-helpusOrange shadow-lg"
                 : "bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white"
@@ -167,7 +200,7 @@ export default function Orcamentos() {
           </div>
           <div
             onClick={() => setPassoAtual(3)}
-            className={`py-2 px-1 rounded-xl cursor-pointer font-bold transition border ${
+            className={`py-2.5 px-1 rounded-xl cursor-pointer font-bold transition border ${
               passoAtual === 3
                 ? "bg-helpusOrange text-white border-helpusOrange shadow-lg"
                 : "bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white"
@@ -177,7 +210,7 @@ export default function Orcamentos() {
           </div>
           <div
             onClick={() => setPassoAtual(4)}
-            className={`py-2 px-1 rounded-xl cursor-pointer font-bold transition border ${
+            className={`py-2.5 px-1 rounded-xl cursor-pointer font-bold transition border ${
               passoAtual === 4
                 ? "bg-helpusOrange text-white border-helpusOrange shadow-lg"
                 : "bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white"
@@ -268,8 +301,9 @@ export default function Orcamentos() {
             </span>
 
             <button
+              type="button"
               onClick={aplicarSugestaoAutomatica}
-              className="py-3 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition transform hover:scale-[1.02] flex items-center gap-2"
+              className="py-3.5 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition transform hover:scale-[1.02] flex items-center gap-2 cursor-pointer"
             >
               <span>Gerar Sugestão Automática para {qtdConvidados} Pessoas</span>
               <span>→</span>
@@ -292,15 +326,16 @@ export default function Orcamentos() {
             </div>
 
             <button
+              type="button"
               onClick={() => setPassoAtual(1)}
-              className="text-xs text-neutral-400 hover:text-white underline"
+              className="text-xs text-neutral-400 hover:text-white underline cursor-pointer"
             >
               ← Alterar tipo de evento ({qtdConvidados} pessoas)
             </button>
           </div>
 
           {/* Lista de Itens no Orçamento Atual */}
-          {cartItems.length > 0 && (
+          {cartItems.length > 0 ? (
             <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-800 space-y-3">
               <div className="text-xs font-bold text-helpusOrange uppercase tracking-wider">
                 Itens Atualmente no Seu Pedido:
@@ -319,6 +354,7 @@ export default function Orcamentos() {
                     <div className="flex items-center gap-2">
                       <div className="flex items-center border border-neutral-700 rounded bg-neutral-950">
                         <button
+                          type="button"
                           onClick={() => updateQuantity(it.itemKey, it.quantidade - 1)}
                           className="px-2 py-0.5 text-neutral-400 hover:text-white"
                         >
@@ -326,6 +362,7 @@ export default function Orcamentos() {
                         </button>
                         <span className="px-2 font-bold text-white">{it.quantidade}</span>
                         <button
+                          type="button"
                           onClick={() => updateQuantity(it.itemKey, it.quantidade + 1)}
                           className="px-2 py-0.5 text-neutral-400 hover:text-white"
                         >
@@ -333,8 +370,9 @@ export default function Orcamentos() {
                         </button>
                       </div>
                       <button
+                        type="button"
                         onClick={() => removeItem(it.itemKey)}
-                        className="text-red-400 text-[11px] hover:underline"
+                        className="text-red-400 text-[11px] hover:underline cursor-pointer"
                       >
                         ✕
                       </button>
@@ -343,6 +381,10 @@ export default function Orcamentos() {
                 ))}
               </div>
             </div>
+          ) : (
+            <div className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 text-center text-xs text-neutral-400">
+              Nenhum produto selecionado ainda. Escolha abaixo quais equipamentos deseja adicionar!
+            </div>
           )}
 
           {/* Adicionar Mais Produtos do Acervo */}
@@ -350,7 +392,7 @@ export default function Orcamentos() {
             <h3 className="text-xs font-bold text-neutral-300 uppercase">Adicionar Outros Equipamentos:</h3>
 
             <div className="grid sm:grid-cols-3 gap-3 max-h-72 overflow-y-auto pr-1">
-              {products.map((p) => (
+              {(products && products.length > 0 ? products : []).map((p) => (
                 <div
                   key={p.id}
                   className="bg-neutral-950 border border-neutral-800 rounded-xl p-3 flex items-center gap-3"
@@ -364,8 +406,9 @@ export default function Orcamentos() {
                     <div className="font-bold text-white text-xs truncate">{p.nome}</div>
                     <div className="text-[11px] font-bold text-emerald-400">{formatCurrency(p.precoDiaria)}</div>
                     <button
-                      onClick={() => addToCart(p, 1, [])}
-                      className="mt-1 text-[10px] bg-helpusOrange/20 hover:bg-helpusOrange text-helpusOrange hover:text-white px-2 py-0.5 rounded font-bold transition w-full"
+                      type="button"
+                      onClick={() => addProductToCart(p, 1, [])}
+                      className="mt-1 text-[10px] bg-helpusOrange/20 hover:bg-helpusOrange text-helpusOrange hover:text-white px-2 py-0.5 rounded font-bold transition w-full cursor-pointer"
                     >
                       + Incluir
                     </button>
@@ -378,8 +421,9 @@ export default function Orcamentos() {
           {/* Botões de Avanço */}
           <div className="flex justify-between items-center pt-4 border-t border-neutral-800">
             <button
+              type="button"
               onClick={() => setPassoAtual(1)}
-              className="py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs rounded-xl"
+              className="py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs rounded-xl cursor-pointer"
             >
               ← Voltar Passo 1
             </button>
@@ -390,9 +434,10 @@ export default function Orcamentos() {
               </span>
 
               <button
+                type="button"
                 onClick={() => setPassoAtual(3)}
                 disabled={cartItems.length === 0}
-                className="py-3 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition transform hover:scale-[1.02] disabled:opacity-50"
+                className="py-3 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition transform hover:scale-[1.02] disabled:opacity-50 cursor-pointer"
               >
                 Avançar para Localização →
               </button>
@@ -409,7 +454,7 @@ export default function Orcamentos() {
               <span>🚚</span> Onde Entregaremos seu Material em João Pessoa?
             </h2>
             <p className="text-neutral-400 text-xs mt-1">
-              O frete e descarregamento é calculado dinamicamente de acordo com seu bairro.
+              O frete e descarregamento é calculated dinamicamente de acordo com seu bairro.
             </p>
           </div>
 
@@ -487,16 +532,18 @@ export default function Orcamentos() {
 
           <div className="flex justify-between items-center pt-4 border-t border-neutral-800">
             <button
+              type="button"
               onClick={() => setPassoAtual(2)}
-              className="py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs rounded-xl"
+              className="py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs rounded-xl cursor-pointer"
             >
               ← Voltar Passo 2
             </button>
 
             <button
+              type="button"
               onClick={() => setPassoAtual(4)}
               disabled={!rua || !nome || !whatsapp}
-              className="py-3 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition transform hover:scale-[1.02] disabled:opacity-50"
+              className="py-3 px-6 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition transform hover:scale-[1.02] disabled:opacity-50 cursor-pointer"
             >
               Avançar para Resumo Final →
             </button>
@@ -573,7 +620,7 @@ export default function Orcamentos() {
             <button
               type="button"
               onClick={() => setPassoAtual(3)}
-              className="py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs rounded-xl"
+              className="py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs rounded-xl cursor-pointer"
             >
               ← Voltar Passo 3
             </button>
@@ -581,7 +628,7 @@ export default function Orcamentos() {
             <button
               type="submit"
               disabled={enviando}
-              className="py-4 px-8 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-sm rounded-xl shadow-xl transition transform hover:scale-[1.02] flex items-center gap-2 disabled:opacity-50"
+              className="py-4 px-8 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-sm rounded-xl shadow-xl transition transform hover:scale-[1.02] flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               <span>{enviando ? "Registrando Orçamento..." : "⚡ Registrar Orçamento & Ver Comprovante"}</span>
             </button>

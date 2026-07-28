@@ -57,8 +57,10 @@ export function CartProvider({ children }) {
   }, [dataInicio, dataFim]);
 
   const addItem = (product, quantidade = 1, opcoesSelecionadas = []) => {
+    if (!product) return;
     setCartItems((prev) => {
-      const itemKey = `${product.id}-${opcoesSelecionadas.map(o => o.id).sort().join(",")}`;
+      const pId = product.id || `p-${Date.now()}`;
+      const itemKey = `${pId}-${opcoesSelecionadas.map(o => o.id).sort().join(",")}`;
       const existingIndex = prev.findIndex(item => item.itemKey === itemKey);
 
       if (existingIndex > -1) {
@@ -68,13 +70,19 @@ export function CartProvider({ children }) {
       }
 
       const precoAdicionais = opcoesSelecionadas.reduce((acc, op) => acc + (op.preco || 0), 0);
-      const precoUnitarioDiaria = (product.precoDiaria || 0) + precoAdicionais;
+      const precoUnitarioDiaria = (product.precoDiaria || product.priceDaily || 0) + precoAdicionais;
 
       return [
         ...prev,
         {
           itemKey,
-          product,
+          product: {
+            id: pId,
+            nome: product.nome || product.name || "Equipamento Corporativo",
+            sku: product.sku || "SKU-001",
+            imagem: product.imagem || product.image || "/mesas-e-cadeiras-01.jpeg",
+            precoDiaria: product.precoDiaria || product.priceDaily || 0
+          },
           quantidade,
           opcoesSelecionadas,
           precoUnitarioDiaria
@@ -171,6 +179,7 @@ export function CartProvider({ children }) {
         closeCart: () => setIsCartOpen(false),
         toggleCart: () => setIsCartOpen((prev) => !prev),
         addItem,
+        addToCart: addItem, // ALIAS FOR UNBROKEN COMPATIBILITY
         removeItem,
         updateQuantity,
         clearCart,
