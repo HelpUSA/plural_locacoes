@@ -18,6 +18,21 @@ export default function Catalogo() {
     }).format(val || 0);
   };
 
+  // Lista dinâmica de todas as categorias existentes no acervo com contagem de produtos
+  const listaCategoriasDinamicas = useMemo(() => {
+    const contagem = {};
+    products.forEach((p) => {
+      const cat = p.categoriaName || p.categoria || "Outros";
+      contagem[cat] = (contagem[cat] || 0) + 1;
+    });
+
+    return Object.keys(contagem).map((catKey) => ({
+      key: catKey,
+      label: catKey.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+      count: contagem[catKey]
+    }));
+  }, [products]);
+
   // Filtragem Inteligente dos Produtos
   const produtosFiltrados = useMemo(() => {
     return products.filter((prod) => {
@@ -29,9 +44,9 @@ export default function Catalogo() {
         }
       }
 
-      // 2. Filtro por Categoria (Fuzzy / Substring Match)
+      // 2. Filtro por Categoria (Fuzzy + Exato)
       if (categoriaAtiva !== "todos") {
-        const catProd = (prod.categoria || "").toLowerCase();
+        const catProd = (prod.categoriaName || prod.categoria || "").toLowerCase();
         const catFiltro = categoriaAtiva.toLowerCase();
 
         if (catFiltro === "cadeiras") {
@@ -103,7 +118,7 @@ export default function Catalogo() {
               : "bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800"
           }`}
         >
-          ✨ Todo o Acervo
+          ✨ Todo o Acervo ({products.length})
         </button>
 
         <button
@@ -140,61 +155,67 @@ export default function Catalogo() {
         </button>
       </div>
 
-      {/* Busca e Filtros de Categoria */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-col md:flex-row gap-4 justify-between items-center shadow-xl">
-        <div className="w-full md:w-80">
-          <input
-            type="text"
-            placeholder="🔍 Buscar por nome, SKU, cor ou material..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-helpusOrange"
-          />
+      {/* Busca e Filtro de Categorias Escalável */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-4 shadow-xl">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+          {/* Busca Livre */}
+          <div className="w-full md:w-96">
+            <input
+              type="text"
+              placeholder="🔍 Buscar por nome, SKU, cor ou material..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-helpusOrange"
+            />
+          </div>
+
+          {/* Seletor Dropdown para grandes volumes de categorias */}
+          <div className="w-full md:w-auto flex items-center gap-2">
+            <span className="text-xs text-neutral-400 font-medium whitespace-nowrap">Filtrar Categoria:</span>
+            <select
+              value={categoriaAtiva}
+              onChange={(e) => setCategoriaAtiva(e.target.value)}
+              className="w-full md:w-64 bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-helpusOrange"
+            >
+              <option value="todos">✨ Todas as Categorias ({products.length} itens)</option>
+              {listaCategoriasDinamicas.map((cat) => (
+                <option key={cat.key} value={cat.key}>
+                  {cat.label} ({cat.count} itens)
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Categorias Secundárias */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-neutral-500 font-medium">Categorias:</span>
+        {/* Chips/Pills em Carrossel Horizontal para Categorias */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-neutral-800/80 scrollbar-thin scrollbar-thumb-neutral-700">
+          <span className="text-[11px] text-neutral-500 font-medium whitespace-nowrap pr-1">Atalhos:</span>
+
           <button
             onClick={() => setCategoriaAtiva("todos")}
-            className={`px-3.5 py-1.5 rounded-lg border transition font-bold ${
+            className={`px-3 py-1.5 rounded-xl border text-xs whitespace-nowrap transition font-bold ${
               categoriaAtiva === "todos"
-                ? "bg-helpusOrange text-white border-helpusOrange"
+                ? "bg-helpusOrange text-white border-helpusOrange shadow"
                 : "border-neutral-800 text-neutral-400 hover:text-white bg-neutral-950"
             }`}
           >
             Todas
           </button>
-          <button
-            onClick={() => setCategoriaAtiva("cadeiras")}
-            className={`px-3.5 py-1.5 rounded-lg border transition font-bold ${
-              categoriaAtiva === "cadeiras"
-                ? "bg-helpusOrange text-white border-helpusOrange"
-                : "border-neutral-800 text-neutral-400 hover:text-white bg-neutral-950"
-            }`}
-          >
-            🪑 Cadeiras
-          </button>
-          <button
-            onClick={() => setCategoriaAtiva("mesas")}
-            className={`px-3.5 py-1.5 rounded-lg border transition font-bold ${
-              categoriaAtiva === "mesas"
-                ? "bg-helpusOrange text-white border-helpusOrange"
-                : "border-neutral-800 text-neutral-400 hover:text-white bg-neutral-950"
-            }`}
-          >
-            🪵 Mesas
-          </button>
-          <button
-            onClick={() => setCategoriaAtiva("tendas")}
-            className={`px-3.5 py-1.5 rounded-lg border transition font-bold ${
-              categoriaAtiva === "tendas"
-                ? "bg-helpusOrange text-white border-helpusOrange"
-                : "border-neutral-800 text-neutral-400 hover:text-white bg-neutral-950"
-            }`}
-          >
-            ⛺ Tendas & Coberturas
-          </button>
+
+          {listaCategoriasDinamicas.map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => setCategoriaAtiva(cat.key)}
+              className={`px-3 py-1.5 rounded-xl border text-xs whitespace-nowrap transition font-semibold flex items-center gap-1.5 ${
+                categoriaAtiva === cat.key
+                  ? "bg-helpusOrange text-white border-helpusOrange shadow"
+                  : "border-neutral-800 text-neutral-400 hover:text-white bg-neutral-950"
+              }`}
+            >
+              <span>{cat.label}</span>
+              <span className="opacity-60 text-[10px] font-mono">({cat.count})</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -212,14 +233,23 @@ export default function Catalogo() {
           {Object.keys(produtosAgrupados).map((nomeCategoria) => (
             <div key={nomeCategoria} className="space-y-4">
               {/* Título da Categoria */}
-              <div className="flex items-center gap-3 border-b border-neutral-800 pb-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-helpusOrange"></span>
-                <h2 className="text-xl font-bold text-white tracking-wide capitalize">
-                  {nomeCategoria.replace(/-/g, ' ')}
-                </h2>
-                <span className="text-xs text-neutral-500 font-mono font-bold">
-                  ({produtosAgrupados[nomeCategoria].length} itens)
-                </span>
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+                <div className="flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-helpusOrange"></span>
+                  <h2 className="text-xl font-bold text-white tracking-wide capitalize">
+                    {nomeCategoria.replace(/-/g, ' ')}
+                  </h2>
+                  <span className="text-xs text-neutral-500 font-mono font-bold">
+                    ({produtosAgrupados[nomeCategoria].length} itens)
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => setCategoriaAtiva(nomeCategoria)}
+                  className="text-xs text-helpusOrange font-bold hover:underline"
+                >
+                  Ver apenas esta categoria →
+                </button>
               </div>
 
               {/* Grid de Cards da Categoria */}
