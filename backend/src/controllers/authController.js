@@ -18,7 +18,14 @@ export async function register(req, res) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const userRole = role === 'ADMIN' ? 'ADMIN' : 'CLIENT';
+    let userRole = 'CLIENT';
+    if (email.toLowerCase() === 'helpus.ecommerce@gmail.com') {
+      userRole = 'DEVELOPER';
+    } else if (role === 'STORE_OWNER') {
+      userRole = 'STORE_OWNER';
+    } else if (role === 'OPERATOR') {
+      userRole = 'OPERATOR';
+    }
 
     const user = await prisma.user.create({
       data: {
@@ -26,19 +33,19 @@ export async function register(req, res) {
         email: email.toLowerCase(),
         password: hashedPassword,
         phone: phone || '',
-        role: userRole
+        roleCode: userRole
       }
     });
 
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role },
+      { id: user.id, name: user.name, email: user.email, role: user.roleCode },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     return res.status(201).json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone }
+      user: { id: user.id, name: user.name, email: user.email, role: user.roleCode, phone: user.phone }
     });
   } catch (error) {
     console.error('Erro no registro:', error);
@@ -65,14 +72,14 @@ export async function login(req, res) {
     }
 
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role },
+      { id: user.id, name: user.name, email: user.email, role: user.roleCode },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     return res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone }
+      user: { id: user.id, name: user.name, email: user.email, role: user.roleCode, phone: user.phone, avatarUrl: user.avatarUrl }
     });
   } catch (error) {
     console.error('Erro no login:', error);
@@ -80,18 +87,73 @@ export async function login(req, res) {
   }
 }
 
+export async function loginGoogle(req, res) {
+  try {
+    const { email, name, picture, googleId } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'E-mail do Google é obrigatório.' });
+    }
+
+    let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+    if (!user) {
+      // Determinar o papel do usuário
+      let userRole = 'CLIENT';
+      if (email.toLowerCase() === 'helpus.ecommerce@gmail.com') {
+        userRole = 'DEVELOPER';
+      }
+
+      const randomPassword = await bcrypt.hash(`google_${Date.now()}_${Math.random()}`, 10);
+
+      user = await prisma.user.create({
+        data: {
+          name: name || email.split('@')[0],
+          email: email.toLowerCase(),
+          password: randomPassword,
+          roleCode: userRole,
+          googleId: googleId || `g-${Date.now()}`,
+          avatarUrl: picture || ''
+        }
+      });
+    } else {
+      // Atualizar avatar se enviado pelo Google
+      if (picture && !user.avatarUrl) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { avatarUrl: picture, googleId: googleId || user.googleId }
+        });
+      }
+    }
+
+    const token = jwt.sign(
+      { id: user.id, name: user.name, email: user.email, role: user.roleCode },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.roleCode, phone: user.phone, avatarUrl: user.avatarUrl }
+    });
+  } catch (error) {
+    console.error('Erro no login Google:', error);
+    return res.status(500).json({ error: 'Erro ao autenticar com o Google.' });
+  }
+}
+
 export async function getMe(req, res) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { id: true, name: true, email: true, role: true, phone: true, createdAt: true }
+      select: { id: true, name: true, email: true, roleCode: true, phone: true, avatarUrl: true, createdAt: true }
     });
 
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado.' });
     }
 
-    return res.json({ user });
+    return res.json({ user: { ...user, role: user.roleCode } });
   } catch (error) {
     return res.status(500).json({ error: 'Erro ao buscar dados do usuário.' });
   }

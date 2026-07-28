@@ -4,13 +4,14 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Iniciando Seeding da Base de Dados da Plural Locações...');
+  console.log('🌱 Iniciando Seeding com Níveis de Acesso (DEVELOPER, STORE_OWNER, OPERATOR, CLIENT)...');
 
-  // 1. Criar Roles (Perfis de Acesso)
+  // 1. Criar Roles (Perfis de Acesso Multi-Nível)
   const roles = [
-    { code: 'ADMIN', name: 'Administrador Gestor', description: 'Acesso total ao painel, catálogo, relatórios e usuários' },
-    { code: 'CLIENT', name: 'Cliente Registrado', description: 'Realiza locações, acompanha status e salva endereços' },
-    { code: 'LOGISTICS', name: 'Equipe de Entregas & Logística', description: 'Visualização das rotas e romaneios de entrega e recolhimento' }
+    { code: 'DEVELOPER', name: 'Desenvolvedor & Admin Geral', description: 'Acesso total irrestrito a todas as lojas, configs globais e desenvolvedor' },
+    { code: 'STORE_OWNER', name: 'Dono / Gerente da Loja', description: 'Gestão da loja, catálogo, financeiro, relatórios e operadores' },
+    { code: 'OPERATOR', name: 'Operador / Funcionário', description: 'Operação de catálogo, estoque, romaneios e status de entregas' },
+    { code: 'CLIENT', name: 'Cliente Final', description: 'Realiza locações 100% web, visualiza histórico e comprovantes' }
   ];
 
   for (const r of roles) {
@@ -20,31 +21,64 @@ async function main() {
       create: r
     });
   }
-  console.log('✅ Perfis de acesso (Roles) configurados.');
+  console.log('✅ 4 Níveis de acesso (Roles) configurados.');
 
-  // 2. Criar Usuários Iniciais (Admin, Cliente, Logística)
-  const hashedPasswordAdmin = await bcrypt.hash('admin123', 10);
-  const hashedPasswordClient = await bcrypt.hash('cliente123', 10);
+  // 2. Criar Usuários Iniciais por Nível
+  const hashDevPassword = await bcrypt.hash('@dmLocal1993', 10);
+  const hashOwnerPassword = await bcrypt.hash('gerente123', 10);
+  const hashOperatorPassword = await bcrypt.hash('operador123', 10);
+  const hashClientPassword = await bcrypt.hash('cliente123', 10);
 
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@plurallocacoes.com.br' },
-    update: {},
+  // 👑 DEVELOPER (SuperAdmin / Dev Geral)
+  const devUser = await prisma.user.upsert({
+    where: { email: 'helpus.ecommerce@gmail.com' },
+    update: {
+      password: hashDevPassword,
+      roleCode: 'DEVELOPER'
+    },
     create: {
-      name: 'Wagner (Gestor Plural)',
-      email: 'admin@plurallocacoes.com.br',
-      password: hashedPasswordAdmin,
+      name: 'Wagner (Desenvolvedor Geral)',
+      email: 'helpus.ecommerce@gmail.com',
+      password: hashDevPassword,
       phone: '(83) 99908-7188',
-      roleCode: 'ADMIN'
+      roleCode: 'DEVELOPER'
     }
   });
 
+  // 🏬 STORE_OWNER (Gerente Plural Locações)
+  const ownerUser = await prisma.user.upsert({
+    where: { email: 'gerente@plurallocacoes.com.br' },
+    update: {},
+    create: {
+      name: 'Júlio (Gerente Plural)',
+      email: 'gerente@plurallocacoes.com.br',
+      password: hashOwnerPassword,
+      phone: '(83) 99908-7188',
+      roleCode: 'STORE_OWNER'
+    }
+  });
+
+  // 🛠️ OPERATOR (Operador de Estoque/Entrega)
+  const operatorUser = await prisma.user.upsert({
+    where: { email: 'operador@plurallocacoes.com.br' },
+    update: {},
+    create: {
+      name: 'Carlos (Operador Logístico)',
+      email: 'operador@plurallocacoes.com.br',
+      password: hashOperatorPassword,
+      phone: '(83) 98888-1111',
+      roleCode: 'OPERATOR'
+    }
+  });
+
+  // 👤 CLIENT (Cliente Final)
   const clientUser = await prisma.user.upsert({
     where: { email: 'cliente@exemplo.com' },
     update: {},
     create: {
       name: 'Maria Santos',
       email: 'cliente@exemplo.com',
-      password: hashedPasswordClient,
+      password: hashClientPassword,
       phone: '(83) 98888-7777',
       roleCode: 'CLIENT',
       addresses: {
@@ -62,7 +96,7 @@ async function main() {
     }
   });
 
-  console.log('✅ Usuários padrão cadastrados (Admin e Cliente).');
+  console.log('✅ Usuários cadastrados: SuperAdmin Dev (helpus.ecommerce@gmail.com), Gerente, Operador e Cliente.');
 
   // 3. Criar Categorias
   const categories = [
@@ -83,9 +117,8 @@ async function main() {
     });
     catMap[c.slug] = cat.id;
   }
-  console.log('✅ Categorias cadastradas.');
 
-  // 4. Criar Produtos com Especificações, Galerias e Opcionais Vincualdos
+  // 4. Criar Produtos com Especificações, Galerias e Opcionais
   const initialProducts = [
     {
       name: 'Mesa Redonda 1,20m em MDF Nobre',
@@ -238,7 +271,7 @@ async function main() {
     }
   }
 
-  console.log('✅ Produtos e Opcionais cadastrados no banco de dados com sucesso.');
+  console.log('✅ Base de dados re-alimentada com sucesso!');
 }
 
 main()

@@ -57,18 +57,64 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       return data;
     } catch (err) {
-      // Fallback para modo offline local caso a API backend ainda não esteja ativa no Railway
-      if (email.toLowerCase().includes("admin")) {
-        const mockAdmin = { id: "admin-1", name: "Administrador Plural", email, role: "ADMIN", phone: "(83) 99999-9999" };
-        setUser(mockAdmin);
-        setToken("mock-token-admin");
-        return { user: mockAdmin, token: "mock-token-admin" };
-      } else {
-        const mockUser = { id: `usr-${Date.now()}`, name: email.split("@")[0], email, role: "CLIENT", phone: "(83) 99999-8888" };
-        setUser(mockUser);
-        setToken("mock-token-user");
-        return { user: mockUser, token: "mock-token-user" };
+      // Fallback local se a API backend estiver inacessível
+      let role = "CLIENT";
+      if (email.toLowerCase() === "helpus.ecommerce@gmail.com") role = "DEVELOPER";
+      else if (email.toLowerCase().includes("gerente")) role = "STORE_OWNER";
+      else if (email.toLowerCase().includes("operador")) role = "OPERATOR";
+
+      const mockUser = {
+        id: `usr-${Date.now()}`,
+        name: email.split("@")[0],
+        email,
+        roleCode: role,
+        role,
+        phone: "(83) 99908-7188"
+      };
+
+      setUser(mockUser);
+      setToken("mock-token-session");
+      return { user: mockUser, token: "mock-token-session" };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (googleUser) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(googleUser)
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Falha na autenticação via Google.");
       }
+
+      setToken(data.token);
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      let role = "CLIENT";
+      if (googleUser.email && googleUser.email.toLowerCase() === "helpus.ecommerce@gmail.com") {
+        role = "DEVELOPER";
+      }
+
+      const mockUser = {
+        id: `google-${Date.now()}`,
+        name: googleUser.name || googleUser.email.split("@")[0],
+        email: googleUser.email,
+        avatarUrl: googleUser.picture || "",
+        roleCode: role,
+        role
+      };
+
+      setUser(mockUser);
+      setToken("mock-token-google");
+      return { user: mockUser, token: "mock-token-google" };
     } finally {
       setLoading(false);
     }
@@ -80,7 +126,7 @@ export function AuthProvider({ children }) {
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, phone, role: "CLIENT" })
+        body: JSON.stringify({ name, email, password, phone })
       });
 
       const data = await response.json();
@@ -92,11 +138,13 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       return data;
     } catch (err) {
-      // Fallback para modo offline local
-      const mockUser = { id: `usr-${Date.now()}`, name, email, role: "CLIENT", phone };
+      let role = "CLIENT";
+      if (email.toLowerCase() === "helpus.ecommerce@gmail.com") role = "DEVELOPER";
+
+      const mockUser = { id: `usr-${Date.now()}`, name, email, roleCode: role, role, phone };
       setUser(mockUser);
-      setToken("mock-token-user");
-      return { user: mockUser, token: "mock-token-user" };
+      setToken("mock-token-session");
+      return { user: mockUser, token: "mock-token-session" };
     } finally {
       setLoading(false);
     }
@@ -109,6 +157,12 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("plural_token");
   };
 
+  const userRole = user?.roleCode || user?.role || "CLIENT";
+  const isDeveloper = userRole === "DEVELOPER";
+  const isStoreOwner = userRole === "STORE_OWNER" || isDeveloper;
+  const isOperator = userRole === "OPERATOR" || isStoreOwner;
+  const isAdmin = isDeveloper || isStoreOwner || isOperator;
+
   return (
     <AuthContext.Provider
       value={{
@@ -116,9 +170,14 @@ export function AuthProvider({ children }) {
         token,
         loading,
         login,
+        loginWithGoogle,
         register,
         logout,
-        isAdmin: user?.role === "ADMIN",
+        userRole,
+        isDeveloper,
+        isStoreOwner,
+        isOperator,
+        isAdmin,
         isAuthenticated: !!user
       }}
     >

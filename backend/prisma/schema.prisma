@@ -9,7 +9,7 @@ datasource db {
 
 model Role {
   id          String   @id @default(uuid())
-  code        String   @unique // "CLIENT", "ADMIN", "LOGISTICS"
+  code        String   @unique // "DEVELOPER", "STORE_OWNER", "OPERATOR", "CLIENT"
   name        String
   description String?
   users       User[]
@@ -21,8 +21,10 @@ model User {
   email     String    @unique
   password  String
   phone     String?
-  roleCode  String    @default("CLIENT")
+  roleCode  String    @default("CLIENT") // DEVELOPER, STORE_OWNER, OPERATOR, CLIENT
   role      Role?     @relation(fields: [roleCode], references: [code])
+  googleId  String?   @unique
+  avatarUrl String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   addresses Address[]

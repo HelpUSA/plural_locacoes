@@ -10,6 +10,7 @@ const router = Router();
 // --- Auth Routes ---
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
+router.post('/auth/google', authController.loginGoogle);
 router.get('/auth/me', authenticateToken, authController.getMe);
 
 // --- Product Routes ---
