@@ -1,61 +1,76 @@
-// 📄 src/pages/Home.jsx
 import React from "react";
 import { Link } from "react-router-dom";
+import { useProducts } from "../context/ProductContext.jsx";
+import { useCart } from "../context/CartContext.jsx";
 import logo from "/logo-plural.jpg";
 import julio from "/julio-foto.png";
 import videoBg from "/video01.mp4";
 
 export default function Home() {
-  const produtos = [
+  const { products } = useProducts();
+  const { addToCart } = useCart();
+
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    }).format(val || 0);
+  };
+
+  // Produtos Destaques para a Home
+  const destaquesCategorias = products.slice(0, 6);
+
+  const diferenciais = [
     {
-      id: "mesa-redonda",
-      titulo: "Mesa Redonda com Tampo",
-      preco: "R$ 40 /un",
-      imagem: "/mesas-e-cadeiras-01.jpeg",
-      items: [
-        { nome: "Cadeira de plástico com capa", valor: "R$ 10 /un" },
-        { nome: "Toalha branca (até o chão)", valor: "R$ 30 /un" },
-        { nome: "Cobre-mancha champanhe", valor: "R$ 20 /un" },
-      ],
-      destaque: "Combinação elegante para casamentos e aniversários.",
+      icone: "👑",
+      titulo: "Mobiliário Nobre & Higienizado",
+      descricao: "Cadeiras Tiffany, Dior cristal, Paris amadeirada e bistrôs 100% revisados e sanitizados a cada evento."
     },
     {
-      id: "conjunto-praia",
-      titulo: "Conjunto de Mesa com 4 Cadeiras",
-      preco: "R$ 20,00 /conjunto",
-      imagem: "/mesas-e-cadeiras-02.jpeg",
-      items: [
-        { nome: "Mesa quadrada plástica", valor: "Inclusa" },
-        { nome: "4 cadeiras plásticas", valor: "Inclusas" },
-      ],
-      destaque: "Perfeito para praia, churrascos e eventos casuais.",
+      icone: "🚚",
+      titulo: "Entrega Pontual com Frota Própria",
+      descricao: "Logística especializada atendendo todos os bairros de João Pessoa, Cabedelo, Conde e região."
     },
     {
-      id: "mesa-retangular",
-      titulo: "Mesa Retangular com Tampo",
-      preco: "R$ 40 /un",
-      imagem: "/mesas-e-cadeiras-03.jpeg",
-      items: [
-        { nome: "Cadeira de plástico com capa", valor: "R$ 10 /un" },
-        { nome: "Toalha branca (até o chão)", valor: "R$ 30 /un" },
-        { nome: "Caminho de mesa champanhe", valor: "R$ 20 /un" },
-      ],
-      destaque: "Versátil para buffet, coffee break e mesas comunitárias.",
+      icone: "📜",
+      titulo: "Contrato A4 & Sinal 30% PIX",
+      descricao: "Emissão oficial de Proposta Comercial, Orçamento em PDF, Contrato registrado e Recibo com quitação."
     },
+    {
+      icone: "⛺",
+      titulo: "Montagem de Estruturas Inclusa",
+      descricao: "Nossa equipe técnica cuida do descarregamento, montagem de tendas, pistas e climatizadores no local."
+    }
+  ];
+
+  const depoimentos = [
+    {
+      nome: "Mariana Alencar",
+      tipo: "Cerimonialista de Casamentos",
+      texto: "A Plural Locações salvou nosso casamento na praia em Cabo Branco! As cadeiras Tiffany douradas e a tenda cristal chegaram impecáveis e a montagem foi ultra rápida.",
+      estrelas: "⭐⭐⭐⭐⭐"
+    },
+    {
+      nome: "Carlos Eduardo",
+      tipo: "Organizador de Congressos & Feiras",
+      texto: "Alugamos 300 cadeiras bistrô e climatizadores industriais para nossa convenção. Pontualidade britânica e notas/contratos emitidos perfeitamente.",
+      estrelas: "⭐⭐⭐⭐⭐"
+    },
+    {
+      nome: "Fernanda Gouveia",
+      tipo: "Aniversário de 15 Anos em Tambaú",
+      texto: "O kit de mesas bistrô de vidro com refletores LED deixou nosso lounge de fotos maravilhoso. Atendimento rápido pelo WhatsApp e site excelente!",
+      estrelas: "⭐⭐⭐⭐⭐"
+    }
   ];
 
   return (
-    <>
-      {/* ===== HERO ===== */}
+    <div className="space-y-16 pb-16">
+      {/* ===== HERO IMPACTANTE COM VÍDEO & GRADIENTE GLASSMORPHISM ===== */}
       <section
-        className="
-          relative min-h-[100dvh] pt-16
-          w-full overflow-hidden bg-black text-white
-          flex items-center
-        "
+        className="relative min-h-[92dvh] w-full overflow-hidden bg-black text-white flex items-center pt-8"
         aria-label="Apresentação Plural Locações"
       >
-        {/* Vídeo de fundo */}
         <video
           src={videoBg}
           autoPlay
@@ -63,187 +78,234 @@ export default function Home() {
           muted
           playsInline
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover opacity-60"
+          className="absolute inset-0 h-full w-full object-cover opacity-50 scale-105"
         />
 
-        {/* Sobreposição com gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-black/40" />
 
-        {/* Conteúdo */}
-        <div className="relative z-10 w-11/12 max-w-6xl mx-auto">
-          <div className="grid items-center gap-8 md:gap-12 md:grid-cols-2 animate-fadeIn">
-            {/* Texto */}
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight drop-shadow-lg">
-                Equipamentos para Festas e Eventos
+        <div className="relative z-10 w-11/12 max-w-7xl mx-auto py-12">
+          <div className="grid items-center gap-10 lg:grid-cols-12 animate-fadeIn">
+            {/* Texto Hero */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-helpusOrange/20 border border-helpusOrange/40 text-helpusOrange text-xs font-black tracking-wider uppercase backdrop-blur-md">
+                <span>⭐ A Estrutura Líder para Eventos em João Pessoa</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-white tracking-tight drop-shadow-xl">
+                Transforme seu Evento com <span className="text-helpusOrange">Mobiliário de Alto Padrão</span>
               </h1>
 
-              <p className="text-lg md:text-xl text-zinc-200/90 drop-shadow">
-                Locação de mesas, cadeiras, tendas, iluminação e muito mais para
-                o seu evento ser um sucesso em João Pessoa e região.
+              <p className="text-base sm:text-lg text-neutral-300 max-w-2xl leading-relaxed drop-shadow">
+                Locação de Cadeiras Tiffany, Dior Cristal, Mesas Redondas de Banquetes, Tendas Piramidais, Climatizadores e Enxoval completo com montagem pontual em João Pessoa e região.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href="https://wa.me/5583999087188"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="
-                    inline-flex items-center justify-center
-                    px-6 py-3 rounded-full text-base font-semibold
-                    bg-helpusOrange hover:bg-[#d64a28]
-                    shadow-lg shadow-black/30
-                    transition-transform duration-300 hover:scale-[1.03]
-                  "
+              {/* Botões de Ação */}
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <Link
+                  to="/orcamentos"
+                  className="px-7 py-4 rounded-2xl text-sm font-black bg-helpusOrange hover:bg-[#d64a28] text-white shadow-xl shadow-helpusOrange/20 transition-transform duration-300 hover:scale-[1.03] flex items-center gap-2"
                 >
-                  Fale no WhatsApp
-                </a>
+                  <span>⚡ Fazer Cotação Instantânea</span>
+                </Link>
 
                 <Link
                   to="/catalogo"
-                  className="
-                    inline-flex items-center justify-center
-                    px-6 py-3 rounded-full text-base font-semibold
-                    bg-white/10 hover:bg-white/20 backdrop-blur
-                    ring-1 ring-white/30
-                    transition-colors
-                  "
+                  className="px-7 py-4 rounded-2xl text-sm font-bold bg-neutral-900/90 hover:bg-neutral-800 text-white backdrop-blur ring-1 ring-neutral-700 transition"
                 >
-                  Ver Catálogo
+                  📦 Explorar Acervo (28+ Itens)
                 </Link>
+              </div>
+
+              {/* Badges de Confiança */}
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-neutral-800/80 text-xs text-neutral-400">
+                <div>
+                  <div className="text-lg font-black text-white font-mono">+1.200</div>
+                  <div>Eventos Realizados</div>
+                </div>
+                <div>
+                  <div className="text-lg font-black text-emerald-400 font-mono">100%</div>
+                  <div>Higienizado & Novo</div>
+                </div>
+                <div>
+                  <div className="text-lg font-black text-helpusOrange font-mono">24h</div>
+                  <div>Suporte no Evento</div>
+                </div>
               </div>
             </div>
 
-            {/* Bloco visual */}
-            <div className="flex flex-col items-center md:items-end gap-5 md:gap-6">
-              <img
-                src={logo}
-                alt="Logo Plural Locações"
-                loading="eager"
-                className="w-40 md:w-52 drop-shadow-lg animate-fadeIn"
-                style={{ animationDelay: "100ms" }}
-              />
+            {/* Bloco Visual de Destaque */}
+            <div className="lg:col-span-5 flex flex-col items-center lg:items-end space-y-4">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-helpusOrange to-amber-600 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                <img
+                  src={julio}
+                  alt="Júlio — Gerente Plural Locações"
+                  className="relative w-64 sm:w-72 lg:w-80 rounded-2xl border-2 border-neutral-700 shadow-2xl object-cover"
+                />
+              </div>
 
-              <img
-                src={julio}
-                alt="Júlio — Plural Locações"
-                loading="lazy"
-                className="
-                  w-56 md:w-64 rounded-2xl border-4 border-white/60
-                  shadow-2xl transition-transform duration-300 hover:scale-105
-                  animate-fadeIn
-                "
-                style={{ animationDelay: "220ms" }}
-              />
+              <div className="bg-neutral-900/90 backdrop-blur border border-neutral-800 p-3.5 rounded-2xl flex items-center gap-3 text-xs text-neutral-300 max-w-xs shadow-xl">
+                <img src={logo} alt="Logo" className="w-10 h-10 rounded-xl object-cover" />
+                <div>
+                  <div className="font-bold text-white">Plural Locações</div>
+                  <div className="text-[10px] text-neutral-400">Atendimento personalizado com orçamentos em PDF no ato.</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ===== CATÁLOGO HOME ===== */}
-      <section className="bg-neutral-950 text-neutral-100 py-12 md:py-16">
-        <div className="w-11/12 max-w-7xl mx-auto">
-          <header className="mb-8 md:mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold">
-              Mesas, Cadeiras & Enxoval
-            </h2>
-            <p className="text-neutral-400 mt-2">
-              Itens podem ser contratados separadamente ou em conjunto.
-            </p>
-          </header>
+      {/* ===== DESTAQUES DO ACERVO (PRODUTOS MAIS PEDIDOS) ===== */}
+      <section className="max-w-7xl mx-auto px-4 space-y-8">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-neutral-800 pb-4">
+          <div>
+            <span className="text-xs uppercase font-extrabold tracking-wider text-helpusOrange">
+              Seleção Especial de Locação
+            </span>
+            <h2 className="text-3xl font-black text-white mt-1">Os Favoritos para Casamentos e Recepções</h2>
+          </div>
+          <Link to="/catalogo" className="text-xs font-bold text-helpusOrange hover:underline">
+            Ver Todos os 28 Equipamentos →
+          </Link>
+        </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {produtos.map((p) => (
-              <div
-                key={p.id}
-                className="group rounded-2xl bg-neutral-900/70 border border-neutral-800 overflow-hidden shadow-lg hover:shadow-xl transition-all"
-              >
-                <div className="aspect-[16/11] overflow-hidden">
-                  <img
-                    src={p.imagem}
-                    alt={p.titulo}
-                    className="h-full w-full object-cover group-hover:scale-[1.02] transition-transform"
-                    loading="lazy"
-                  />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {destaquesCategorias.map((prod) => (
+            <div
+              key={prod.id}
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl hover:border-neutral-700 transition flex flex-col group"
+            >
+              <div className="relative aspect-[16/11] overflow-hidden bg-neutral-950">
+                <img
+                  src={prod.imagem}
+                  alt={prod.nome}
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                />
+                {prod.destaque && (
+                  <span className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur text-helpusOrange border border-helpusOrange/40 text-[10px] font-extrabold px-2.5 py-1 rounded-full">
+                    {prod.destaque}
+                  </span>
+                )}
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <div className="font-mono text-[10px] text-helpusOrange font-bold">{prod.sku}</div>
+                  <h3 className="text-base font-bold text-white mt-0.5 line-clamp-1">{prod.nome}</h3>
+                  <p className="text-xs text-neutral-400 mt-1 line-clamp-2 leading-relaxed">
+                    {prod.descricao}
+                  </p>
                 </div>
-                <div className="p-5">
-                  <div className="flex items-baseline justify-between gap-4">
-                    <h3 className="font-semibold text-lg">{p.titulo}</h3>
-                    <span className="px-2 py-1 text-sm rounded-md bg-helpusOrange/15 text-helpusOrange font-medium">
-                      {p.preco}
-                    </span>
+
+                <div className="pt-3 border-t border-neutral-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-neutral-500 uppercase font-semibold block">Valor por Diária</span>
+                    <span className="text-lg font-black text-emerald-400">{formatCurrency(prod.precoDiaria)}</span>
                   </div>
-                  {p.destaque && (
-                    <p className="text-sm text-neutral-400 mt-2">{p.destaque}</p>
-                  )}
-                  <ul className="mt-4 space-y-1.5 text-sm">
-                    {p.items.map((i) => (
-                      <li
-                        key={i.nome}
-                        className="flex items-center justify-between border-b border-neutral-800/70 py-1"
-                      >
-                        <span className="text-neutral-300">{i.nome}</span>
-                        <span className="text-neutral-400">{i.valor}</span>
-                      </li>
-                    ))}
-                  </ul>
+
+                  <button
+                    onClick={() => addToCart(prod, 1, [])}
+                    className="py-2 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white text-xs font-bold rounded-xl shadow transition transform hover:scale-[1.02]"
+                  >
+                    + Cotar
+                  </button>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== DIFERENCIAIS COMPETITIVOS ===== */}
+      <section className="bg-neutral-900/60 border-y border-neutral-800/80 py-12">
+        <div className="max-w-7xl mx-auto px-4 space-y-8">
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
+            <span className="text-xs uppercase font-extrabold tracking-widest text-helpusOrange">
+              Por que a Plural Locações?
+            </span>
+            <h2 className="text-3xl font-black text-white">Excelência em Cada Detalhe do Seu Evento</h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {diferenciais.map((dif, idx) => (
+              <div
+                key={idx}
+                className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-3 hover:border-helpusOrange/40 transition shadow-xl"
+              >
+                <div className="w-12 h-12 rounded-xl bg-helpusOrange/15 text-helpusOrange font-bold text-2xl flex items-center justify-center border border-helpusOrange/30">
+                  {dif.icone}
+                </div>
+                <h3 className="font-bold text-white text-base">{dif.titulo}</h3>
+                <p className="text-neutral-400 text-xs leading-relaxed">{dif.descricao}</p>
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* Serviços adicionais */}
-          <div className="mt-10 md:mt-14 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5 md:p-6">
-            <h3 className="font-semibold text-lg mb-3">Serviços adicionais</h3>
-            <div className="grid sm:grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center justify-between rounded-lg border border-neutral-800/70 px-4 py-3">
-                <span className="text-neutral-300">
-                  Frete urbano (João Pessoa)
-                </span>
-                <span className="text-neutral-200 font-medium">R$ 120–250</span>
+      {/* ===== DEPOIMENTOS DE CLIENTES (PROVA SOCIAL) ===== */}
+      <section className="max-w-7xl mx-auto px-4 space-y-8">
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <span className="text-xs uppercase font-extrabold tracking-widest text-helpusOrange">
+            Avaliações Reais
+          </span>
+          <h2 className="text-3xl font-black text-white">Quem Aluga com a Plural Recomenda</h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {depoimentos.map((dep, idx) => (
+            <div
+              key={idx}
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 shadow-xl flex flex-col justify-between"
+            >
+              <div className="space-y-3">
+                <div className="text-sm">{dep.estrelas}</div>
+                <p className="text-xs text-neutral-300 leading-relaxed italic">"{dep.texto}"</p>
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-neutral-800/70 px-4 py-3">
-                <span className="text-neutral-300">Montagem e retirada</span>
-                <span className="text-neutral-200 font-medium">R$ 250–450</span>
+              <div className="pt-3 border-t border-neutral-800">
+                <div className="font-bold text-white text-xs">{dep.nome}</div>
+                <div className="text-[10px] text-helpusOrange font-semibold">{dep.tipo}</div>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mt-3">
-              * Valores de frete variam por bairro. Consulte disponibilidade para
-              outras cidades.
+          ))}
+        </div>
+      </section>
+
+      {/* ===== CTA BANNER FINAL ===== */}
+      <section className="max-w-7xl mx-auto px-4">
+        <div className="bg-gradient-to-r from-neutral-900 via-neutral-900 to-black border border-neutral-800 rounded-3xl p-8 lg:p-12 flex flex-wrap items-center justify-between gap-8 shadow-2xl relative overflow-hidden">
+          <div className="space-y-3 max-w-2xl">
+            <span className="text-xs font-black text-helpusOrange uppercase tracking-widest">
+              Garantia de Data & Estoque
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+              Solicite seu Orçamento Comercial Oficial em Poucos Segundos
+            </h2>
+            <p className="text-neutral-400 text-sm">
+              Selecione as diárias, o bairro em João Pessoa e receba sua proposta com cálculo transparente e sinal PIX de 30%.
             </p>
           </div>
 
-          {/* CTA */}
-          <div className="mt-10 md:mt-12 flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/orcamentos"
+              className="py-4 px-8 bg-helpusOrange hover:bg-[#d64a28] text-white font-black text-sm rounded-2xl shadow-xl transition transform hover:scale-[1.02]"
+            >
+              Montar Orçamento Agora ⚡
+            </Link>
             <a
-              href="https://wa.me/5583999087188"
+              href="https://wa.me/5583999087188?text=Ola%2C%20gostaria%20de%20solicitar%20um%20orcamento."
               target="_blank"
               rel="noopener noreferrer"
-              className="
-                inline-flex items-center justify-center
-                px-6 py-3 rounded-full text-base font-semibold
-                bg-helpusOrange hover:bg-[#d64a28]
-                shadow-lg shadow-black/30
-                transition-transform duration-300 hover:scale-[1.03]
-              "
+              className="py-4 px-8 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm rounded-2xl border border-neutral-700 transition"
             >
-              Pedir orçamento no WhatsApp
+              Falar no WhatsApp 📲
             </a>
-            <Link
-              to="/catalogo"
-              className="
-                inline-flex items-center justify-center
-                px-6 py-3 rounded-full text-base font-semibold
-                bg-white/10 hover:bg-white/20 backdrop-blur
-                ring-1 ring-white/30
-                transition-colors
-              "
-            >
-              Ver catálogo completo
-            </Link>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
