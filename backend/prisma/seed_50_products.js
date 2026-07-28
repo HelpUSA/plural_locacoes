@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const mockProducts = [
-  // --- ASSENTOS & CADEIRAS ---
+  // --- ASSENTOS & CADEIRAS (9 produtos) ---
   {
     sku: 'CAD-TIF-01',
     name: 'Cadeira Tiffany Dourada Polipropileno',
@@ -19,7 +19,8 @@ const mockProducts = [
     material: 'Polipropileno Virgem',
     dimensions: '40cm x 88cm x 42cm',
     maxWeight: 'INMETRO 180 kg',
-    highlight: '👑 Líder de Locações para Casamentos'
+    highlight: '👑 Líder de Locações para Casamentos',
+    status: 'ACTIVE'
   },
   {
     sku: 'CAD-TIF-02',
@@ -36,7 +37,8 @@ const mockProducts = [
     material: 'Polipropileno Alta Densidade',
     dimensions: '40cm x 88cm x 42cm',
     maxWeight: '180 kg',
-    highlight: '✨ Acabamento Sem Encaixes'
+    highlight: '✨ Acabamento Sem Encaixes',
+    status: 'ACTIVE'
   },
   {
     sku: 'CAD-PAR-03',
@@ -53,7 +55,8 @@ const mockProducts = [
     material: 'Resina Amadeirada com Fibra',
     dimensions: '42cm x 90cm x 45cm',
     maxWeight: '160 kg',
-    highlight: '🌿 Estilo Boho & Beach Wedding'
+    highlight: '🌿 Estilo Boho & Beach Wedding',
+    status: 'ACTIVE'
   },
   {
     sku: 'CAD-BIS-04',
@@ -70,7 +73,8 @@ const mockProducts = [
     material: 'Polipropileno 100% Reciclável',
     dimensions: '52cm x 84cm x 54cm',
     maxWeight: 'INMETRO 182 kg',
-    highlight: '🛡️ Certificação de Segurança INMETRO'
+    highlight: '🛡️ Certificação de Segurança INMETRO',
+    status: 'ACTIVE'
   },
   {
     sku: 'CAD-BIS-05',
@@ -87,7 +91,8 @@ const mockProducts = [
     material: 'Polipropileno Virgem',
     dimensions: '52cm x 84cm x 54cm',
     maxWeight: '182 kg',
-    highlight: '🖤 Design Moderno & Versátil'
+    highlight: '🖤 Design Moderno & Versátil',
+    status: 'ACTIVE'
   },
   {
     sku: 'CAD-DIO-06',
@@ -104,7 +109,8 @@ const mockProducts = [
     material: 'Policarbonato Bayer UV',
     dimensions: '41cm x 92cm x 43cm',
     maxWeight: '150 kg',
-    highlight: '💎 Luxo Absoluto para Recepções'
+    highlight: '💎 Luxo Absoluto para Recepções',
+    status: 'ACTIVE'
   },
   {
     sku: 'CAD-TOL-07',
@@ -121,7 +127,8 @@ const mockProducts = [
     material: 'Aço Carbono Estampado',
     dimensions: '44cm x 85cm x 45cm',
     maxWeight: '160 kg',
-    highlight: '🏭 Estilo Industrial & Urban'
+    highlight: '🏭 Estilo Industrial & Urban',
+    status: 'ACTIVE'
   },
   {
     sku: 'BAN-BIS-08',
@@ -138,7 +145,8 @@ const mockProducts = [
     material: 'Aço Carbono com Epóxi',
     dimensions: '43cm x 94cm x 43cm (Assento 76cm)',
     maxWeight: '140 kg',
-    highlight: '🍸 Ideal para Bares & Coquetéis'
+    highlight: '🍸 Ideal para Bares & Coquetéis',
+    status: 'ACTIVE'
   },
   {
     sku: 'POL-LOU-09',
@@ -155,10 +163,11 @@ const mockProducts = [
     material: 'Veludo Premium & Madeira Nobre',
     dimensions: '75cm x 82cm x 70cm',
     maxWeight: '150 kg',
-    highlight: '🛋️ Espaço VIP & Salão de Fotos'
+    highlight: '🛋️ Espaço VIP & Salão de Fotos',
+    status: 'ACTIVE'
   },
 
-  // --- MESAS & BANCADAS ---
+  // --- MESAS & BANCADAS (5 produtos) ---
   {
     sku: 'MES-RED-11',
     name: 'Mesa Redonda Monobloco Plástica 90cm',
@@ -174,7 +183,8 @@ const mockProducts = [
     material: 'Polipropileno com Proteção UV',
     dimensions: '90cm diâmetro x 72cm altura',
     maxWeight: '50 kg distribuídos',
-    highlight: '☀️ Suporte a Ombrelone'
+    highlight: '☀️ Suporte a Ombrelone',
+    status: 'ACTIVE'
   },
   {
     sku: 'MES-RED-12',
@@ -191,7 +201,8 @@ const mockProducts = [
     material: 'Polietileno de Alta Densidade (PEAD) & Aço',
     dimensions: '152cm diâmetro x 74cm altura',
     maxWeight: '150 kg',
-    highlight: '👥 Acomoda 8 Convidados'
+    highlight: '👥 Acomoda 8 Convidados',
+    status: 'ACTIVE'
   },
   {
     sku: 'MES-RED-13',
@@ -208,7 +219,8 @@ const mockProducts = [
     material: 'PEAD Virgem & Pés de Aço Tubular',
     dimensions: '183cm diâmetro x 74cm altura',
     maxWeight: '200 kg',
-    highlight: '🍽️ Acomoda 10 Convidados'
+    highlight: '🍽️ Acomoda 10 Convidados',
+    status: 'ACTIVE'
   },
   {
     sku: 'MES-PRAN-14',
@@ -225,7 +237,8 @@ const mockProducts = [
     material: 'PEAD Tampo Inteiriço & Pés de Aço',
     dimensions: '200cm x 90cm x 74cm',
     maxWeight: '180 kg',
-    highlight: '🍲 Perfeita para Ilhas de Buffet'
+    highlight: '🍲 Perfeita para Ilhas de Buffet',
+    status: 'ACTIVE'
   },
   {
     sku: 'MES-BIS-15',
@@ -242,10 +255,11 @@ const mockProducts = [
     material: 'Vidro Temperado 8mm & Aço Cromado',
     dimensions: '60cm diâmetro x 105cm altura',
     maxWeight: '40 kg',
-    highlight: '🍸 Ideal para Coquetel em Pé'
+    highlight: '🍸 Ideal para Coquetel em Pé',
+    status: 'ACTIVE'
   },
 
-  // --- TENDAS & ESTRUTURAS ---
+  // --- TENDAS & ESTRUTURAS (4 produtos) ---
   {
     sku: 'TEN-PIR-19',
     name: 'Tenda Piramidal 5x5m Branca Reforçada',
@@ -261,7 +275,8 @@ const mockProducts = [
     material: 'Lona PVC TD1000 & Aço Galvanizado',
     dimensions: '5,00m x 5,00m (Pé direito 3,00m)',
     maxWeight: 'Proteção contra ventos até 60 km/h',
-    highlight: '☂️ Lona 100% Impermeável & Térmica'
+    highlight: '☂️ Lona 100% Impermeável & Térmica',
+    status: 'ACTIVE'
   },
   {
     sku: 'TEN-PIR-20',
@@ -278,7 +293,8 @@ const mockProducts = [
     material: 'Lona PVC Reforçada & Estrutura Treliçada',
     dimensions: '10,00m x 10,00m (Pé direito 4,00m)',
     maxWeight: 'Capacidade até 120 convidados',
-    highlight: '🎪 Cobertura Total para Grandiosos Eventos'
+    highlight: '🎪 Cobertura Total para Grandiosos Eventos',
+    status: 'ACTIVE'
   },
   {
     sku: 'TEN-CRI-21',
@@ -295,7 +311,8 @@ const mockProducts = [
     material: 'Lona PVC Cristal 0,60mm & Aço Galvanizado',
     dimensions: '10,00m x 10,00m',
     maxWeight: 'Efeito Panorâmico Noturno',
-    highlight: '🌌 Visão Céu Estrelado para Casamentos Noturnos'
+    highlight: '🌌 Visão Céu Estrelado para Casamentos Noturnos',
+    status: 'ACTIVE'
   },
   {
     sku: 'PIS-DAN-22',
@@ -312,10 +329,11 @@ const mockProducts = [
     material: 'Compensado Naval 18mm & Revestimento Vinílico',
     dimensions: '5,00m x 5,00m (25m²)',
     maxWeight: 'Carga de impacto 500 kg/m²',
-    highlight: '🕺 O Centro da Festa de Casamento ou 15 Anos'
+    highlight: '🕺 O Centro da Festa de Casamento ou 15 Anos',
+    status: 'ACTIVE'
   },
 
-  // --- CLIMATIZAÇÃO & ILUMINAÇÃO ---
+  // --- CLIMATIZAÇÃO & ILUMINAÇÃO (2 produtos) ---
   {
     sku: 'CLI-EVA-24',
     name: 'Climatizador Evaporativo Industrial 45 Litros',
@@ -331,7 +349,8 @@ const mockProducts = [
     material: 'Polímero de Alta Resistência (220V)',
     dimensions: '65cm x 115cm x 42cm',
     maxWeight: 'Tanque de 45 L (Autonomia 8h)',
-    highlight: '❄️ Redução de até 8°C no Calor de João Pessoa'
+    highlight: '❄️ Redução de até 8°C no Calor de João Pessoa',
+    status: 'ACTIVE'
   },
   {
     sku: 'REF-LED-25',
@@ -348,10 +367,11 @@ const mockProducts = [
     material: 'Alumínio Injetado (Bivolt)',
     dimensions: '22cm x 22cm x 15cm',
     maxWeight: 'Baixo Consumo LED',
-    highlight: '💡 Iluminação Decorativa de Ambientes'
+    highlight: '💡 Iluminação Decorativa de Ambientes',
+    status: 'ACTIVE'
   },
 
-  // --- KITS & COMBOS DE AMBIENTES ---
+  // --- KITS & COMBOS DE AMBIENTES (2 produtos) ---
   {
     sku: 'KIT-PRA-28',
     name: 'Kit Coquetel Beira Mar (10 Bistrôs + 40 Banquetas)',
@@ -368,7 +388,8 @@ const mockProducts = [
     material: 'Aço & Vidro Temperado',
     dimensions: 'Capacidade para 40 a 60 convidados',
     maxWeight: 'Economia de 20% no pacote',
-    highlight: '🔥 Mais Vendido para Aniversários & Happy Hour'
+    highlight: '🔥 Mais Vendido para Aniversários & Happy Hour',
+    status: 'ACTIVE'
   },
   {
     sku: 'KIT-CAS-29',
@@ -386,7 +407,8 @@ const mockProducts = [
     material: 'Móveis Nobres Selecionados',
     dimensions: 'Atende 100 convidados sentados',
     maxWeight: 'Montagem e Frete Inclusos',
-    highlight: '💍 Pacote Completo para Cerimônia de Casamento'
+    highlight: '💍 Pacote Completo para Cerimônia de Casamento',
+    status: 'ACTIVE'
   }
 ];
 
@@ -416,7 +438,6 @@ async function main() {
     if (item.departmentSlug.includes('estruturas')) depId = depEstruturas.id;
     if (item.departmentSlug.includes('kits')) depId = depKits.id;
 
-    // Garante Categoria
     const category = await prisma.category.upsert({
       where: { slug: item.categorySlug },
       update: { name: item.categoryName, departmentId: depId },
@@ -438,6 +459,7 @@ async function main() {
         maxWeight: item.maxWeight,
         highlight: item.highlight,
         isKit: !!item.isKit,
+        status: 'ACTIVE',
         departmentId: depId,
         categoryId: category.id
       },
@@ -455,6 +477,7 @@ async function main() {
         maxWeight: item.maxWeight,
         highlight: item.highlight,
         isKit: !!item.isKit,
+        status: 'ACTIVE',
         departmentId: depId,
         categoryId: category.id
       }

@@ -8,7 +8,6 @@ export default function GoogleLoginButton({ onSuccessRedirect }) {
   useEffect(() => {
     if (!googleClientId) return;
 
-    // Carregar SDK oficial do Google Identity Services (GIS)
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
@@ -18,7 +17,8 @@ export default function GoogleLoginButton({ onSuccessRedirect }) {
         window.google.accounts.id.initialize({
           client_id: googleClientId,
           callback: handleGoogleResponse,
-          auto_select: false
+          auto_select: false,
+          cancel_on_tap_outside: true
         });
 
         const btnContainer = document.getElementById("googleBtnContainer");
@@ -29,6 +29,9 @@ export default function GoogleLoginButton({ onSuccessRedirect }) {
             size: "large",
             width: "100%",
             text: "signin_with",
+            type: "standard",
+            shape: "rectangular",
+            logo_alignment: "left",
             locale: "pt-BR"
           });
         }
@@ -45,7 +48,6 @@ export default function GoogleLoginButton({ onSuccessRedirect }) {
 
   const handleGoogleResponse = async (response) => {
     try {
-      // Decodificar o JWT ID Token do Google
       const base64Url = response.credential.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       const jsonPayload = decodeURIComponent(
@@ -70,14 +72,12 @@ export default function GoogleLoginButton({ onSuccessRedirect }) {
     }
   };
 
-  // Função para abrir o Seletor de Contas do Google com `prompt=select_account`
-  const handleEscolherOutraContaGoogle = () => {
+  const handleAbrirSeletorContasGoogle = () => {
     const redirectUri = window.location.origin + "/login";
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(
       redirectUri
     )}&response_type=id_token&scope=openid%20email%20profile&prompt=select_account&nonce=${Date.now()}`;
 
-    // Janela popup para escolha de conta do Google
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.innerWidth - width) / 2;
@@ -89,7 +89,6 @@ export default function GoogleLoginButton({ onSuccessRedirect }) {
       `width=${width},height=${height},top=${top},left=${left}`
     );
 
-    // Escutar resposta do token via hash na URL
     const checkHash = setInterval(() => {
       try {
         if (popup && popup.location && popup.location.href.includes("id_token=")) {
@@ -105,23 +104,23 @@ export default function GoogleLoginButton({ onSuccessRedirect }) {
           clearInterval(checkHash);
         }
       } catch (e) {
-        // Cross-origin até o redirecionamento
+        // Cross-origin em transição
       }
     }, 500);
   };
 
   return (
     <div className="space-y-2">
-      {/* Botão Nativo do Google */}
+      {/* Botão Oficial Neutro do Google */}
       <div id="googleBtnContainer" className="w-full flex justify-center min-h-[44px]"></div>
 
-      {/* Botão de Troca / Seleção de Outra Conta */}
+      {/* Botão para Forçar Seleção de Qualquer Conta */}
       <button
         type="button"
-        onClick={handleEscolherOutraContaGoogle}
+        onClick={handleAbrirSeletorContasGoogle}
         className="w-full text-[11px] text-neutral-400 hover:text-white underline text-center transition py-1 block"
       >
-        <span>🔁 Escolher outra conta do Google</span>
+        <span>🔁 Entrar com outra conta do Google</span>
       </button>
     </div>
   );
