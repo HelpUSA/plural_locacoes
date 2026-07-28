@@ -7,7 +7,7 @@ const MenuLink = ({ to, children }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `px-3 py-2 rounded-xl text-xs font-medium hover:bg-neutral-800 transition ${
+      `px-3.5 py-2 rounded-xl text-xs font-medium hover:bg-neutral-800 transition ${
         isActive ? "text-helpusOrange font-bold" : "text-neutral-200"
       }`
     }
@@ -37,14 +37,11 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Menu Desktop */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* Menu Desktop Enxuto e Focado */}
+        <nav className="hidden md:flex items-center gap-2">
           <MenuLink to="/catalogo">Catálogo</MenuLink>
-          <MenuLink to="/como-funciona">Como Funciona</MenuLink>
-          <MenuLink to="/quem-somos">Quem Somos</MenuLink>
-          <MenuLink to="/depoimentos">Depoimentos</MenuLink>
           <MenuLink to="/orcamentos">Orçamentos</MenuLink>
-          <MenuLink to="/contato">Contato</MenuLink>
+          <MenuLink to="/como-funciona">Como Funciona</MenuLink>
           {isAdmin && <MenuLink to="/admin">Admin ⚙️</MenuLink>}
         </nav>
 
@@ -114,20 +111,11 @@ export default function Header() {
           <NavLink to="/catalogo" onClick={() => setOpen(false)} className="block py-2">
             Catálogo
           </NavLink>
-          <NavLink to="/como-funciona" onClick={() => setOpen(false)} className="block py-2">
-            Como funciona
-          </NavLink>
-          <NavLink to="/quem-somos" onClick={() => setOpen(false)} className="block py-2">
-            Quem somos
-          </NavLink>
-          <NavLink to="/depoimentos" onClick={() => setOpen(false)} className="block py-2">
-            Depoimentos
-          </NavLink>
           <NavLink to="/orcamentos" onClick={() => setOpen(false)} className="block py-2">
             Orçamentos
           </NavLink>
-          <NavLink to="/contato" onClick={() => setOpen(false)} className="block py-2">
-            Contato
+          <NavLink to="/como-funciona" onClick={() => setOpen(false)} className="block py-2">
+            Como Funciona
           </NavLink>
           {isAuthenticated ? (
             <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">

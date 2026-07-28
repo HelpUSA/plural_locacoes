@@ -1,77 +1,66 @@
-// 📄 src/ui/Footer.jsx
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
     <footer className="mt-16 border-t border-neutral-800 bg-neutral-950/80 backdrop-blur-sm text-neutral-300">
-      {/* Grid principal */}
-      <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-10 animate-fadeIn">
+      <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-10 animate-fadeIn">
         {/* Coluna 1: Identidade */}
         <div>
           <div className="flex items-center gap-3 mb-3">
             <img
               src="/logo-plural-64.png"
               alt="Plural Locações"
-              className="h-10 w-10 rounded-md"
+              className="h-10 w-10 rounded-xl border border-neutral-800 object-cover"
             />
             <div>
               <p className="font-semibold text-white">Plural Locações</p>
-              <p className="text-xs text-neutral-400 -mt-1">Festas & Eventos</p>
+              <p className="text-xs text-neutral-400 -mt-1">Móveis & Equipamentos</p>
             </div>
           </div>
-          <p className="text-sm text-neutral-400 leading-relaxed">
-            Aluguel de mesas, cadeiras, tendas, iluminação e muito mais. Atendemos
-            João Pessoa e região com qualidade e pontualidade.
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            Aluguel de mesas, cadeiras, tendas, iluminação e climatização. Atendemos João Pessoa e região com qualidade e pontualidade.
           </p>
         </div>
 
-        {/* Coluna 2: Contato */}
+        {/* Coluna 2: Contato WhatsApp */}
         <div>
-          <p className="font-semibold mb-3 text-white">Contato</p>
-          <ul className="space-y-2 text-sm">
+          <p className="font-semibold mb-3 text-white">Atendimento Direto</p>
+          <ul className="space-y-2 text-xs">
             <li>
               WhatsApp:{" "}
               <a
-                className="text-helpusOrange hover:underline"
+                className="text-helpusOrange font-bold hover:underline"
                 href="https://wa.me/5583999087188"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                +55 83 99908-7188
+                (83) 99908-7188
               </a>
             </li>
             <li>
               Instagram:{" "}
               <a
-                className="text-helpusOrange hover:underline"
+                className="text-helpusOrange font-bold hover:underline"
                 href="https://instagram.com/plural_locacoes"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                /plural_locacoes
+                @plural_locacoes
               </a>
             </li>
-            <li>Endereço: Parque Solon de Lucena, 142 – Sala 105 – João Pessoa/PB</li>
+            <li className="text-neutral-400">Endereço: Parque Solon de Lucena, 142 – Sala 105 – João Pessoa/PB</li>
           </ul>
         </div>
 
-        {/* Coluna 3: Links */}
+        {/* Coluna 3: Links Rápidos */}
         <div>
-          <p className="font-semibold mb-3 text-white">Links</p>
-          <ul className="space-y-2 text-sm">
-            <li><a className="hover:text-helpusOrange" href="/catalogo">Catálogo</a></li>
-            <li><a className="hover:text-helpusOrange" href="/orcamentos">Orçamentos</a></li>
-            <li><a className="hover:text-helpusOrange" href="/como-funciona">Como funciona</a></li>
-            <li><a className="hover:text-helpusOrange" href="/contato">Contato</a></li>
+          <p className="font-semibold mb-3 text-white">Navegação Rápida</p>
+          <ul className="space-y-2 text-xs">
+            <li><Link className="hover:text-helpusOrange transition font-medium" to="/catalogo">📦 Catálogo Completo</Link></li>
+            <li><Link className="hover:text-helpusOrange transition font-medium" to="/orcamentos">📋 Cotação Online</Link></li>
+            <li><Link className="hover:text-helpusOrange transition font-medium" to="/como-funciona">ℹ️ Como Funciona</Link></li>
           </ul>
-        </div>
-
-        {/* Coluna 4: Horário */}
-        <div>
-          <p className="font-semibold mb-3 text-white">Horário</p>
-          <p className="text-sm text-neutral-400">
-            Segunda a Sábado: 08h às 18h<br />Domingo: fechado
-          </p>
         </div>
       </div>
 
