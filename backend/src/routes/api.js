@@ -35,6 +35,14 @@ router.post('/orders', (req, res, next) => {
 }, orderController.createOrder);
 
 router.get('/orders/my-orders', authenticateToken, orderController.getMyOrders);
+router.put('/orders/:id', (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  if (authHeader) {
+    return authenticateToken(req, res, next);
+  }
+  next();
+}, orderController.updateOrderDetails);
+
 router.get('/admin/orders', authenticateToken, requireAdmin, orderController.getAllOrders);
 router.patch('/admin/orders/:id/status', authenticateToken, requireAdmin, orderController.updateOrderStatus);
 

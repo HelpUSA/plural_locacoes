@@ -46,8 +46,8 @@ export async function createOrder(req, res) {
         items: {
           create: items.map((item) => ({
             productId: item.product.id,
-            quantity: item.quantidade,
-            unitPrice: item.precoUnitarioDiaria,
+            quantity: item.quantity || item.quantidade || 1,
+            unitPrice: item.unitPrice || item.precoUnitarioDiaria || 0,
             addOns: JSON.stringify(item.opcoesSelecionadas || [])
           }))
         },
@@ -140,6 +140,7 @@ export async function updateOrderStatus(req, res) {
         }
       },
       include: {
+        items: { include: { product: true } },
         statusHistory: { orderBy: { createdAt: 'desc' } }
       }
     });
@@ -148,5 +149,36 @@ export async function updateOrderStatus(req, res) {
   } catch (error) {
     console.error('Erro ao atualizar status do pedido:', error);
     return res.status(500).json({ error: 'Erro ao atualizar status.' });
+  }
+}
+
+export async function updateOrderDetails(req, res) {
+  try {
+    const { id } = req.params;
+    const { clientName, whatsapp, startDate, endDate, address, neighborhood, notes, rentalDays, totalPrice } = req.body;
+
+    const updated = await prisma.order.update({
+      where: { id },
+      data: {
+        ...(clientName && { clientName }),
+        ...(whatsapp && { whatsapp }),
+        ...(startDate && { startDate }),
+        ...(endDate && { endDate }),
+        ...(address && { address }),
+        ...(neighborhood && { neighborhood }),
+        ...(notes && { notes }),
+        ...(rentalDays && { rentalDays: parseInt(rentalDays, 10) }),
+        ...(totalPrice && { totalPrice: parseFloat(totalPrice) })
+      },
+      include: {
+        items: { include: { product: true } },
+        statusHistory: { orderBy: { createdAt: 'desc' } }
+      }
+    });
+
+    return res.json(updated);
+  } catch (error) {
+    console.error('Erro ao atualizar detalhes do pedido:', error);
+    return res.status(500).json({ error: 'Erro ao atualizar detalhes do pedido.' });
   }
 }
