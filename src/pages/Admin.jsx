@@ -7,6 +7,7 @@ import OrcamentoPDF from "../components/OrcamentoPDF.jsx";
 import ReciboPDF from "../components/ReciboPDF.jsx";
 import HelpTooltip from "../components/HelpTooltip.jsx";
 import ManualSistemaERP from "../components/ManualSistemaERP.jsx";
+import DeveloperLicensingPanel from "../components/DeveloperLicensingPanel.jsx";
 
 export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
@@ -696,6 +697,19 @@ export default function Admin() {
           >
             📖 Manual & Treinamento
           </button>
+
+          {(user?.role === "DEVELOPER" || user?.role === "ADMIN") && (
+            <button
+              onClick={() => setAbaAtiva("licenciamento")}
+              className={`py-2 px-3 text-xs font-bold rounded-xl transition border ${
+                abaAtiva === "licenciamento"
+                  ? "bg-helpusOrange text-white border-helpusOrange shadow-md"
+                  : "bg-neutral-900 text-helpusOrange border-helpusOrange/40 hover:bg-helpusOrange/10"
+              }`}
+            >
+              🔐 Licenciamento & Comissão
+            </button>
+          )}
         </div>
       </div>
 
@@ -1143,6 +1157,25 @@ export default function Admin() {
 
       {/* ABA 9: Manual & Treinamento */}
       {abaAtiva === "manual" && <ManualSistemaERP />}
+
+      {/* ABA 10: Licenciamento & Comissão do Desenvolvedor */}
+      {abaAtiva === "licenciamento" && (
+        <DeveloperLicensingPanel
+          orders={pedidos}
+          companySettings={companySettings}
+          onUpdateSettings={async (novasConfigs) => {
+            setCompanySettings(prev => ({ ...prev, ...novasConfigs }));
+            await fetch(`${API_BASE}/admin/settings`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token && { Authorization: `Bearer ${token}` })
+              },
+              body: JSON.stringify(novasConfigs)
+            });
+          }}
+        />
+      )}
 
       {/* MODAL CADASTRAR NOVO USUÁRIO */}
       {modalUsuarioAberto && (

@@ -18,13 +18,29 @@ export default function ContratoPDF({ order, companySettings, onClose }) {
     companyName: "Plural Locações & Eventos",
     whatsappSupport: "(83) 99908-7188",
     warehouseAddress: "Av. Epitácio Pessoa, 1250 - João Pessoa / PB",
-    pixKey: "83999087188"
+    pixKey: "83999087188",
+    licenseStatus: "ACTIVE"
   };
+
+  const isWatermarked =
+    settings.licenseStatus === "TRIAL" ||
+    settings.licenseStatus === "EXPIRED" ||
+    settings.watermarkEnabled === "true";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-      <div className="bg-white text-neutral-900 max-w-4xl w-full rounded-2xl shadow-2xl p-8 sm:p-12 space-y-8 my-8 print:p-0 print:shadow-none print:w-full print:max-w-none font-sans">
+      <div className="bg-white text-neutral-900 max-w-4xl w-full rounded-2xl shadow-2xl p-8 sm:p-12 space-y-8 my-8 print:p-0 print:shadow-none print:w-full print:max-w-none font-sans relative">
         
+        {/* Marca d'Água para Licença Trial / Expirada */}
+        {isWatermarked && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20 opacity-20 overflow-hidden">
+            <span className="text-red-600 font-black text-4xl sm:text-5xl -rotate-45 uppercase tracking-widest text-center select-none border-8 border-red-600 p-6 rounded-3xl">
+              DEMONSTRAÇÃO<br />
+              LICENÇA PENDENTE DE RENOVAÇÃO
+            </span>
+          </div>
+        )}
+
         {/* Barra Superior de Ações (Oculta na Impressão) */}
         <div className="flex justify-between items-center border-b border-neutral-200 pb-4 print:hidden">
           <div className="flex items-center gap-2 text-neutral-600 font-bold text-xs">
