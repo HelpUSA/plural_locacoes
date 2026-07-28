@@ -10,7 +10,7 @@ export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { user, token, isAdmin, isDeveloper } = useAuth();
 
-  const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos", "romaneio", "financeiro", "relatorios", "manutencao", "usuarios", "configs"
+  const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos", "categorias", "romaneio", "financeiro", "relatorios", "manutencao", "usuarios", "configs"
   const [pedidos, setPedidos] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [financeiroSummary, setFinanceiroSummary] = useState(null);
@@ -23,6 +23,7 @@ export default function Admin() {
   const [neighborhoodReport, setNeighborhoodReport] = useState([]);
   const [occupancyReport, setOccupancyReport] = useState(null);
 
+  // Configurações
   const [companySettings, setCompanySettings] = useState({
     pixKey: "83999087188",
     companyName: "Plural Locações & Eventos",
@@ -45,18 +46,36 @@ export default function Admin() {
   const [modalManutencaoAberto, setModalManutencaoAberto] = useState(false);
   const [modalVistoriaOrder, setModalVistoriaOrder] = useState(null);
 
-  // States Form Produto
+  // Form State Produto
   const [sku, setSku] = useState("");
   const [nome, setNome] = useState("");
-  const [categoria, setCategoria] = useState("mesas");
+  const [departamento, setDepartamento] = useState("mobiliario-lounges");
+  const [categoria, setCategoria] = useState("mesas-bancadas");
+  const [grupo, setGrupo] = useState("mesas-redondas");
   const [precoDiaria, setPrecoDiaria] = useState("");
-  const [imagem, setImagem] = useState("");
+  const [precoSemanal, setPrecoSemanal] = useState("");
+  const [imagem, setImagem] = useState("/mesas-e-cadeiras-01.jpeg");
   const [descricao, setDescricao] = useState("");
   const [cor, setCor] = useState("");
   const [material, setMaterial] = useState("");
   const [dimensoes, setDimensoes] = useState("");
   const [pesoSuportado, setPesoSuportado] = useState("");
   const [estoque, setEstoque] = useState("50");
+  const [destaque, setDestaque] = useState("");
+  const [isKit, setIsKit] = useState(false);
+  const [produtoEditando, setProdutoEditando] = useState(null);
+
+  // Form State Categoria/Grupo
+  const [novaCatNome, setNovaCatNome] = useState("");
+  const [novoGrupoNome, setNovoGrupoNome] = useState("");
+  const [categoriasLocais, setCategoriasLocais] = useState([
+    { id: "c1", name: "Assentos & Cadeiras", department: "Mobiliário & Lounges" },
+    { id: "c2", name: "Mesas & Bancadas", department: "Mobiliário & Lounges" },
+    { id: "c3", name: "Tendas & Pistas", department: "Estruturas & Climatização" },
+    { id: "c4", name: "Climatização & Iluminação", department: "Estruturas & Climatização" },
+    { id: "c5", name: "Mesa Posta & Panaria", department: "Gastronomia & Enxoval" },
+    { id: "c6", name: "Combos & Kits Prontos", department: "Kits & Sugestões de Ambientes" }
+  ]);
 
   // States Form Despesa
   const [despesaDesc, setDespesaDesc] = useState("");
@@ -200,6 +219,95 @@ export default function Admin() {
     if (abaAtiva === "manutencao") fetchManutencao();
   }, [abaAtiva]);
 
+  const abrirModalCriarProduto = () => {
+    setProdutoEditando(null);
+    setSku(`SKU-${Date.now().toString().slice(-6)}`);
+    setNome("");
+    setDepartamento("mobiliario-lounges");
+    setCategoria("mesas-bancadas");
+    setGrupo("mesas-redondas");
+    setPrecoDiaria("");
+    setPrecoSemanal("");
+    setImagem("/mesas-e-cadeiras-01.jpeg");
+    setDescricao("");
+    setCor("Preta / Branca");
+    setMaterial("Polipropileno Virgem");
+    setDimensoes("42cm x 88cm x 45cm");
+    setPesoSuportado("INMETRO 182 kg");
+    setEstoque("50");
+    setDestaque("");
+    setIsKit(false);
+    setModalProdutoAberto(true);
+  };
+
+  const abrirModalEditarProduto = (prod) => {
+    setProdutoEditando(prod);
+    setSku(prod.sku || `SKU-${prod.id.slice(-6)}`);
+    setNome(prod.nome || prod.name);
+    setDepartamento(prod.departamento || "mobiliario-lounges");
+    setCategoria(prod.categoria || "mesas-bancadas");
+    setGrupo(prod.grupo || "mesas-redondas");
+    setPrecoDiaria((prod.precoDiaria || prod.priceDaily || "").toString());
+    setPrecoSemanal((prod.precoSemanal || prod.priceWeekly || "").toString());
+    setImagem(prod.imagem || prod.image || "/mesas-e-cadeiras-01.jpeg");
+    setDescricao(prod.descricao || prod.description || "");
+    setCor(prod.cor || prod.color || "");
+    setMaterial(prod.material || "");
+    setDimensoes(prod.dimensoes || prod.dimensions || "");
+    setPesoSuportado(prod.pesoSuportado || prod.maxWeight || "");
+    setEstoque((prod.estoque || prod.stock || 50).toString());
+    setDestaque(prod.destaque || prod.highlight || "");
+    setIsKit(!!prod.isKit);
+    setModalProdutoAberto(true);
+  };
+
+  const handleSalvarProdutoSubmit = (e) => {
+    e.preventDefault();
+
+    const dados = {
+      sku: sku || `SKU-${Date.now().toString().slice(-6)}`,
+      nome,
+      departamento,
+      categoria,
+      grupo,
+      precoDiaria: parseFloat(precoDiaria) || 0,
+      precoSemanal: parseFloat(precoSemanal) || 0,
+      imagem: imagem || "/mesas-e-cadeiras-01.jpeg",
+      descricao,
+      cor,
+      material,
+      dimensoes,
+      pesoSuportado,
+      estoque: parseInt(estoque, 10) || 50,
+      destaque,
+      isKit
+    };
+
+    if (produtoEditando) {
+      updateProduct(produtoEditando.id, dados);
+    } else {
+      addProduct(dados);
+    }
+
+    setModalProdutoAberto(false);
+    alert(`Equipamento "${nome}" salvo com sucesso!`);
+  };
+
+  const handleCadastrarCategoriaSubmit = (e) => {
+    e.preventDefault();
+    if (!novaCatNome.trim()) return;
+
+    const nova = {
+      id: `c-${Date.now()}`,
+      name: novaCatNome,
+      department: "Mobiliário & Lounges"
+    };
+
+    setCategoriasLocais(prev => [...prev, nova]);
+    setNovaCatNome("");
+    alert(`Categoria "${novaCatNome}" criada com sucesso!`);
+  };
+
   const handleMudarStatusPedido = async (orderId, novoStatus) => {
     try {
       await fetch(`${API_BASE}/admin/orders/${orderId}/status`, {
@@ -341,7 +449,7 @@ export default function Admin() {
           </span>
           <h1 className="text-3xl font-black text-white">Painel de Gestão Plural Locações</h1>
           <p className="text-neutral-400 text-sm">
-            Gestão de orçamentos, recibos, contratos PDF, relatórios BI e financeiro corporativo.
+            Gestão de orçamentos, recibos, contratos PDF, relatórios BI e cadastro de categorias.
           </p>
         </div>
 
@@ -355,7 +463,18 @@ export default function Admin() {
                 : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
             }`}
           >
-            📦 Catálogo
+            📦 Catálogo ({products.length})
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva("categorias")}
+            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+              abaAtiva === "categorias"
+                ? "bg-helpusOrange text-white shadow-md"
+                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+            }`}
+          >
+            🏷️ Categorias & Grupos
           </button>
 
           <button
@@ -388,7 +507,7 @@ export default function Admin() {
                 : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
             }`}
           >
-            📊 Relatórios & BI
+            📊 Relatórios BI
           </button>
 
           <button
@@ -426,15 +545,15 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* ABA 1: Catálogo */}
+      {/* ABA 1: Catálogo de Produtos */}
       {abaAtiva === "produtos" && (
         <div className="space-y-6">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
             <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
               <span className="font-bold text-white text-sm">Acervo de Equipamentos & SKUs</span>
               <button
-                onClick={() => setModalProdutoAberto(true)}
-                className="py-2 px-4 bg-helpusOrange hover:bg-[#d64a28] text-white text-xs font-bold rounded-xl shadow transition"
+                onClick={abrirModalCriarProduto}
+                className="py-2.5 px-5 bg-helpusOrange hover:bg-[#d64a28] text-white text-xs font-bold rounded-xl shadow transition"
               >
                 + Cadastrar Equipamento 📦
               </button>
@@ -477,6 +596,12 @@ export default function Admin() {
                       </td>
                       <td className="p-4 text-right space-x-2">
                         <button
+                          onClick={() => abrirModalEditarProduto(prod)}
+                          className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition"
+                        >
+                          Editar
+                        </button>
+                        <button
                           onClick={() => {
                             if (confirm(`Deseja remover o equipamento "${prod.nome}"?`)) {
                               deleteProduct(prod.id);
@@ -496,7 +621,61 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 2: Romaneios & Emissão de Documentos PDF */}
+      {/* ABA 2: Categorias & Grupos */}
+      {abaAtiva === "categorias" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold text-white">Gestão de Departamentos, Categorias & Subcategorias</h2>
+          </div>
+
+          <form onSubmit={handleCadastrarCategoriaSubmit} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 shadow-xl max-w-lg text-xs">
+            <h3 className="font-bold text-sm text-white">➕ Cadastrar Nova Categoria</h3>
+            <div>
+              <label className="block text-neutral-400 mb-1">Nome da Categoria *</label>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Climatização & Ventilação"
+                value={novaCatNome}
+                onChange={(e) => setNovaCatNome(e.target.value)}
+                className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl px-3 py-2 text-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              className="py-2.5 px-5 bg-helpusOrange text-white font-bold rounded-xl shadow"
+            >
+              Cadastrar Categoria
+            </button>
+          </form>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-neutral-800 font-bold text-white text-sm">
+              Categorias Cadastradas no Sistema
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-neutral-300">
+                <thead className="bg-neutral-950 text-neutral-400 uppercase font-semibold border-b border-neutral-800">
+                  <tr>
+                    <th className="p-4">Categoria</th>
+                    <th className="p-4">Departamento Pai</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800/60">
+                  {categoriasLocais.map((cat) => (
+                    <tr key={cat.id} className="hover:bg-neutral-950/50 transition">
+                      <td className="p-4 font-bold text-white">{cat.name}</td>
+                      <td className="p-4 text-neutral-400">{cat.department}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA 3: Romaneios & Emissão de Documentos PDF */}
       {abaAtiva === "romaneio" && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
@@ -597,7 +776,7 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 3: Financeiro Completo */}
+      {/* ABA 4: Financeiro Completo */}
       {abaAtiva === "financeiro" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
@@ -635,13 +814,12 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 4: Relatórios & BI */}
+      {/* ABA 5: Relatórios & BI */}
       {abaAtiva === "relatorios" && (
         <div className="space-y-6">
           <h2 className="text-lg font-bold text-white">Central de Inteligência de Negócio & Relatórios BI</h2>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Ranking de Produtos */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-xl">
               <h3 className="font-bold text-white text-sm border-b border-neutral-800 pb-2">
                 🏆 Ranking de Equipamentos Mais Alugados
@@ -662,7 +840,6 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Faturamento por Bairro */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-xl">
               <h3 className="font-bold text-white text-sm border-b border-neutral-800 pb-2">
                 📍 Faturamento por Bairro (João Pessoa)
@@ -685,7 +862,7 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 5: Manutenção */}
+      {/* ABA 6: Manutenção */}
       {abaAtiva === "manutencao" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
@@ -728,7 +905,7 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 6: Usuários */}
+      {/* ABA 7: Usuários */}
       {abaAtiva === "usuarios" && (
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-white">Gestão de Usuários</h2>
@@ -748,7 +925,7 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 7: Configurações */}
+      {/* ABA 8: Configurações */}
       {abaAtiva === "configs" && (
         <form onSubmit={handleSalvarSettings} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 shadow-xl max-w-2xl text-xs">
           <h2 className="text-lg font-bold text-white border-b border-neutral-800 pb-3">⚙️ Configurações Globais</h2>
@@ -765,6 +942,202 @@ export default function Admin() {
             Salvar Configurações
           </button>
         </form>
+      )}
+
+      {/* MODAL DE CADASTRAR / EDITAR PRODUTO */}
+      {modalProdutoAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-xl w-full p-6 text-white space-y-4 shadow-2xl my-8">
+            <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+              <h3 className="font-bold text-base text-white">
+                {produtoEditando ? "Editar Equipamento" : "Novo Equipamento para Locação"}
+              </h3>
+              <button onClick={() => setModalProdutoAberto(false)} className="text-neutral-400 hover:text-white font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSalvarProdutoSubmit} className="space-y-3 text-xs">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-neutral-400 mb-1">Código SKU *</label>
+                  <input
+                    type="text"
+                    required
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs font-mono text-helpusOrange"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-neutral-400 mb-1">Nome do Equipamento *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Cadeira Tiffany Dourada"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 mb-1">Departamento *</label>
+                  <select
+                    value={departamento}
+                    onChange={(e) => setDepartamento(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  >
+                    <option value="mobiliario-lounges">Mobiliário & Lounges</option>
+                    <option value="estruturas-climatizacao">Estruturas & Climatização</option>
+                    <option value="gastronomia-enxoval">Gastronomia & Enxoval</option>
+                    <option value="kits-ambientes">Kits & Ambientes</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Categoria *</label>
+                  <select
+                    value={categoria}
+                    onChange={(e) => setCategoria(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  >
+                    <option value="assentos-cadeiras">Assentos & Cadeiras</option>
+                    <option value="mesas-bancadas">Mesas & Bancadas</option>
+                    <option value="tendas-pistas">Tendas & Pistas</option>
+                    <option value="climatizacao-iluminacao">Climatização & Iluminação</option>
+                    <option value="combos-kits-prontos">Combos & Kits Prontos</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 mb-1">Preço / Diária (R$) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={precoDiaria}
+                    onChange={(e) => setPrecoDiaria(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs font-bold text-helpusOrange"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Preço Semanal (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={precoSemanal}
+                    onChange={(e) => setPrecoSemanal(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 mb-1">Cor / Acabamento</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Preta Fosca / Branca"
+                    value={cor}
+                    onChange={(e) => setCor(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Material de Fabricação</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Polipropileno / MDF"
+                    value={material}
+                    onChange={(e) => setMaterial(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 mb-1">Dimensões (L x A x P)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: 42cm x 88cm x 45cm"
+                    value={dimensoes}
+                    onChange={(e) => setDimensoes(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Carga Suportada (kg)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: INMETRO 182 kg"
+                    value={pesoSuportado}
+                    onChange={(e) => setPesoSuportado(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 mb-1">Caminho da Imagem</label>
+                  <input
+                    type="text"
+                    value={imagem}
+                    onChange={(e) => setImagem(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1">Estoque Total</label>
+                  <input
+                    type="number"
+                    value={estoque}
+                    onChange={(e) => setEstoque(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Descrição Comercial</label>
+                <textarea
+                  rows="2"
+                  placeholder="Descrição detalhada do equipamento..."
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setModalProdutoAberto(false)}
+                  className="py-2 px-4 bg-neutral-800 text-neutral-300 rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="py-2 px-5 bg-helpusOrange text-white font-bold rounded-xl shadow"
+                >
+                  Salvar Equipamento
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Modais de Impressão PDF */}
@@ -790,6 +1163,122 @@ export default function Admin() {
           companySettings={companySettings}
           onClose={() => setReciboModalOrder(null)}
         />
+      )}
+
+      {/* Modal Form Vistoria */}
+      {modalVistoriaOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <form onSubmit={handleSalvarVistoria} className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl">
+            <h3 className="font-bold text-lg border-b border-neutral-800 pb-2">
+              🔍 Vistoria de Retorno — #{modalVistoriaOrder.orderNumber || modalVistoriaOrder.id}
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-neutral-400 mb-1">Relatório de Avarias / Peças Faltantes</label>
+                <textarea
+                  rows="3"
+                  placeholder="Ex: 2 cadeiras devolvidas com arranhões profundos e 1 toalha manchada."
+                  value={damagedNotes}
+                  onChange={(e) => setDamagedNotes(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Taxa de Avaria a Cobrar (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={damagedFee}
+                  onChange={(e) => setDamagedFee(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-sm font-bold text-amber-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
+              <button
+                type="button"
+                onClick={() => setModalVistoriaOrder(null)}
+                className="py-2 px-4 bg-neutral-800 text-neutral-300 rounded-xl"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="py-2 px-5 bg-helpusOrange text-white font-bold rounded-xl shadow"
+              >
+                Salvar Vistoria & Romaneio
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Modal Form Despesa */}
+      {modalDespesaAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <form onSubmit={handleSalvarDespesa} className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl">
+            <h3 className="font-bold text-lg border-b border-neutral-800 pb-2">
+              💰 Novo Lançamento Financeiro
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-neutral-400 mb-1">Tipo de Lançamento *</label>
+                <select
+                  value={despesaTipo}
+                  onChange={(e) => setDespesaTipo(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-sm font-bold"
+                >
+                  <option value="EXPENSE">↓ Saída / Despesa Operacional</option>
+                  <option value="INCOME">↑ Entrada / Receita de Locação</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Descrição do Lançamento *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: Compra de 20 novas cadeiras Tiffany"
+                  value={despesaDesc}
+                  onChange={(e) => setDespesaDesc(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 mb-1">Valor (R$) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={despesaValor}
+                  onChange={(e) => setDespesaValor(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 text-white rounded-xl p-2 text-sm font-bold text-emerald-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
+              <button
+                type="button"
+                onClick={() => setModalDespesaAberto(false)}
+                className="py-2 px-4 bg-neutral-800 text-neutral-300 rounded-xl"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="py-2 px-5 bg-helpusOrange text-white font-bold rounded-xl shadow"
+              >
+                Registrar no Financeiro
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );
