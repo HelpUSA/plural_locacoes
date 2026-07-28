@@ -585,6 +585,71 @@ export default function Admin() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+      {/* Banner de Status da Licença para o Gerente / Proprietário */}
+      {companySettings.licenseStatus === "TRIAL" && (
+        <div className="bg-amber-950/80 border border-amber-600/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs text-amber-200 shadow-lg">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🟡</span>
+            <div>
+              <strong className="text-white block text-sm">Versão de Demonstração (Trial) Ativa</strong>
+              <span>Os documentos em PDF são impressos com marca d'água de homologação.</span>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                await fetch(`${API_BASE}/admin/settings`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
+                  body: JSON.stringify({ licenseRequested: "true" })
+                });
+              } catch (e) {}
+              window.open(`https://wa.me/5583999087188?text=${encodeURIComponent("Olá! Sou o gerente da Plural Locações e gostaria de solicitar a ativação da Versão Completa do sistema.")}`, "_blank");
+            }}
+            className="py-2 px-4 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-xl shadow transition cursor-pointer"
+          >
+            ⚡ Solicitar Liberação da Versão Completa
+          </button>
+        </div>
+      )}
+
+      {companySettings.licenseStatus === "EXPIRED" && (
+        <div className="bg-red-950/80 border border-red-700/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs text-red-200 shadow-lg">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🔴</span>
+            <div>
+              <strong className="text-white block text-sm">Licença Pendente de Renovação</strong>
+              <span>A validade do seu contrato expirou. Solicite a renovação com o desenvolvedor para liberar a versão completa.</span>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                await fetch(`${API_BASE}/admin/settings`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
+                  body: JSON.stringify({ licenseRequested: "true" })
+                });
+              } catch (e) {}
+              window.open(`https://wa.me/5583999087188?text=${encodeURIComponent("Olá! Sou o gerente da Plural Locações e gostaria de solicitar a RENOVAÇÃO da licença do sistema.")}`, "_blank");
+            }}
+            className="py-2 px-4 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-xl shadow transition cursor-pointer"
+          >
+            📞 Solicitar Renovação Agora
+          </button>
+        </div>
+      )}
+
+      {companySettings.licenseStatus === "ACTIVE" && (
+        <div className="bg-emerald-950/40 border border-emerald-800/60 px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs text-emerald-300">
+          <div className="flex items-center gap-2">
+            <span>🟢</span>
+            <span><strong>Licença Plural Ativa (Versão Completa)</strong> — Validade do Contrato até <strong className="text-white font-mono">{companySettings.licenseExpirationDate || "31/12/2026"}</strong></span>
+          </div>
+          <span className="text-[10px] text-neutral-400 font-mono hidden sm:inline">Suporte Desenvolvedor 24h</span>
+        </div>
+      )}
+
       {/* Header Admin ERP */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-6">
         <div>

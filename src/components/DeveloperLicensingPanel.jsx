@@ -33,6 +33,8 @@ export default function DeveloperLicensingPanel({ orders = [], companySettings =
   const comissaoDesenvolvedor = (faturamentoTotal * percentual) / 100;
   const faturamentoProprietario = faturamentoTotal - comissaoDesenvolvedor;
 
+  const temSolicitacaoPendente = companySettings.licenseRequested === "true";
+
   const handleSalvarLicenciamento = async (e) => {
     e.preventDefault();
     setSalvando(true);
@@ -42,7 +44,8 @@ export default function DeveloperLicensingPanel({ orders = [], companySettings =
       licenseExpirationDate: dataExpiracao,
       developerCommissionRate: String(taxaComissao),
       trialMonthlyOrderLimit: String(limiteTrial),
-      watermarkEnabled: String(marcaDaguaAtiva)
+      watermarkEnabled: String(marcaDaguaAtiva),
+      licenseRequested: "false" // Reseta a solicitacao apos salvar
     };
 
     try {
@@ -58,7 +61,28 @@ export default function DeveloperLicensingPanel({ orders = [], companySettings =
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Banner de Controle Exclusivo do Desenvolvedor */}
+      {/* Alerta de Solicitação Pendente enviada pelo Gerente */}
+      {temSolicitacaoPendente && (
+        <div className="bg-amber-500 text-black p-5 rounded-3xl font-bold flex flex-wrap items-center justify-between gap-4 shadow-xl border-2 border-amber-400">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🔔</span>
+            <div>
+              <h4 className="text-base font-black uppercase">Solicitação de Liberação da Versão Completa Recebida!</h4>
+              <p className="text-xs font-semibold text-neutral-900 mt-0.5">
+                O gerente/proprietário da Plural Locações solicitou a ativação ilimitada do sistema. Altere o status abaixo para "🟢 Licença Ativa".
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setStatusLicenca("ACTIVE")}
+            className="py-2 px-5 bg-black text-white font-black text-xs rounded-xl hover:bg-neutral-800 transition"
+          >
+            Aprovar & Ativar Agora
+          </button>
+        </div>
+      )}
+
+      {/* Header do Desenvolvedor */}
       <div className="bg-neutral-900 border border-helpusOrange/40 rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl relative overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-4">
           <div>
