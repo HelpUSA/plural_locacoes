@@ -20,8 +20,11 @@ export function authenticateToken(req, res, next) {
 }
 
 export function requireAdmin(req, res, next) {
-  if (!req.user || req.user.role !== 'ADMIN') {
-    return res.status(403).json({ error: 'Acesso negado. Requer privilégios de Administrador.' });
+  const role = req.user?.role || req.user?.roleCode;
+  const allowedRoles = ['DEVELOPER', 'STORE_OWNER', 'OPERATOR', 'ADMIN'];
+
+  if (!req.user || !allowedRoles.includes(role)) {
+    return res.status(403).json({ error: 'Acesso negado. Requer privilégios administrativos.' });
   }
   next();
 }
