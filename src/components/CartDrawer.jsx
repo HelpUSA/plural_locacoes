@@ -28,7 +28,7 @@ export default function CartDrawer() {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL"
-    }).format(val);
+    }).format(val || 0);
   };
 
   return (
@@ -106,7 +106,7 @@ export default function CartDrawer() {
                   className="flex gap-3 bg-neutral-950/80 border border-neutral-800/80 p-3 rounded-xl relative"
                 >
                   <img
-                    src={item.product.imagem}
+                    src={item.product.imagem || item.product.image}
                     alt={item.product.nome}
                     className="w-16 h-16 object-cover rounded-lg border border-neutral-800"
                   />
@@ -115,7 +115,7 @@ export default function CartDrawer() {
                       {item.product.nome}
                     </h4>
 
-                    {item.opcoesSelecionadas.length > 0 && (
+                    {item.opcoesSelecionadas && item.opcoesSelecionadas.length > 0 && (
                       <div className="text-xs text-neutral-400 mt-0.5">
                         {item.opcoesSelecionadas.map((op) => (
                           <span key={op.id} className="block text-[11px] text-neutral-400">
@@ -204,9 +204,9 @@ export default function CartDrawer() {
                 <Link
                   to="/checkout"
                   onClick={closeCart}
-                  className="w-full inline-flex items-center justify-center py-3 px-4 rounded-xl bg-helpusOrange hover:bg-[#d64a28] text-white font-semibold text-sm shadow-lg transition-transform hover:scale-[1.01]"
+                  className="w-full inline-flex items-center justify-center py-3.5 px-4 rounded-xl bg-helpusOrange hover:bg-[#d64a28] text-white font-bold text-xs shadow-lg transition-transform hover:scale-[1.01]"
                 >
-                  Finalizar Orçamento via WhatsApp 📲
+                  ⚡ Concluir e Gravar Reserva no Sistema
                 </Link>
                 <button
                   onClick={clearCart}
