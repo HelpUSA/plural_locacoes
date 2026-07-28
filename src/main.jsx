@@ -25,6 +25,7 @@ import Admin from "./pages/Admin.jsx";
 import Login from "./pages/Login.jsx";
 import Cadastro from "./pages/Cadastro.jsx";
 import MinhaConta from "./pages/MinhaConta.jsx";
+import DevSandbox from "./pages/DevSandbox.jsx";
 
 // Configuração das rotas
 const router = createBrowserRouter([
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
       { path: "login", element: <Login /> },
       { path: "cadastro", element: <Cadastro /> },
       { path: "minha-conta", element: <MinhaConta /> },
+      { path: "dev", element: <DevSandbox /> },
     ],
   },
 ]);
