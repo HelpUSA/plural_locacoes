@@ -481,7 +481,12 @@ async function ensureTaxonomySeed() {
   }
 }
 
-app.listen(PORT, async () => {
-  console.log(`🚀 Servidor Plural Locações rodando na porta ${PORT}`);
-  await ensureTaxonomySeed();
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    console.log(`🚀 Servidor Plural Locações rodando na porta ${PORT}`);
+    await ensureTaxonomySeed();
+  });
+}
+
+export default app;
+
