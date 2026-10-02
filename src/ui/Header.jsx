@@ -43,23 +43,18 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Menu Desktop Unificado & Focado em Vendas */}
+        {/* Menu Desktop Focado em Vendas */}
         <nav className="hidden md:flex items-center gap-2">
           <MenuLink to="/catalogo">📦 Catálogo</MenuLink>
           <MenuLink to="/orcamentos">⚡ Faça Seu Orçamento</MenuLink>
-          {isAdmin ? (
-            <MenuLink to="/admin">Admin ⚙️</MenuLink>
-          ) : (
-            <MenuLink to="/login">Admin ⚙️</MenuLink>
-          )}
         </nav>
 
-        {/* Ações (Login/Conta, Carrinho & WhatsApp) */}
+        {/* Ações (Entrar com Google/Conta, Carrinho & WhatsApp) */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 p-1.5 rounded-2xl">
               <Link
-                to="/minha-conta"
+                to={isAdmin ? "/admin" : "/minha-conta"}
                 className="flex items-center gap-2 px-2.5 py-1 rounded-xl text-xs font-semibold text-white hover:bg-neutral-800 transition"
                 title={`Logado como ${user.email || user.name}`}
               >
@@ -90,9 +85,10 @@ export default function Header() {
           ) : (
             <Link
               to="/login"
-              className="px-4 py-2 rounded-xl bg-helpusOrange/15 border border-helpusOrange/40 text-xs font-bold text-helpusOrange hover:bg-helpusOrange hover:text-white transition cursor-pointer shadow-sm"
+              className="px-4 py-2 rounded-xl bg-helpusOrange/15 border border-helpusOrange/40 text-xs font-bold text-helpusOrange hover:bg-helpusOrange hover:text-white transition cursor-pointer shadow-sm flex items-center gap-1.5"
             >
-              Entrar com Google 🔑
+              <span>Entrar com Google</span>
+              <span>🔑</span>
             </Link>
           )}
 
@@ -145,8 +141,8 @@ export default function Header() {
           </NavLink>
           {isAuthenticated ? (
             <div className="py-2 flex items-center justify-between border-t border-neutral-800 pt-3">
-              <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="text-neutral-200 font-semibold">
-                Minha Conta ({user.name})
+              <NavLink to={isAdmin ? "/admin" : "/minha-conta"} onClick={() => setOpen(false)} className="text-neutral-200 font-semibold">
+                Painel ({user.name})
               </NavLink>
               <button onClick={() => { handleLogout(); setOpen(false); }} className="text-xs text-red-400 font-bold">
                 Sair 🚪
@@ -155,15 +151,6 @@ export default function Header() {
           ) : (
             <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-bold">
               Entrar com Google 🔑
-            </NavLink>
-          )}
-          {isAdmin ? (
-            <NavLink to="/admin" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
-              Painel Admin ⚙️
-            </NavLink>
-          ) : (
-            <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-neutral-400 font-semibold">
-              Acesso Admin ⚙️
             </NavLink>
           )}
         </div>
