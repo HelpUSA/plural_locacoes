@@ -7,7 +7,12 @@ export function useGoogleAuth(options = {}) {
   const {
     clientId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_CLIENT_ID) ||
                '812202824664-r66j9n6ar0f3l83fj73bqvojf8h6p9p5.apps.googleusercontent.com',
-    allowedEmails = null,
+    allowedEmails = [
+      'helpus.ecommerce@gmail.com',
+      'wagner.redes@gmail.com',
+      'pluralocacoes@gmail.com',
+      'pluralocacoes.jp@gmail.com'
+    ],
     onSuccess = null,
     onError = null,
     storageKey = 'plural_google_auth_user'

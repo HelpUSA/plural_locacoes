@@ -96,7 +96,21 @@ export async function loginGoogle(req, res) {
       return res.status(400).json({ error: 'E-mail do Google é obrigatório.' });
     }
 
-    const emailLower = email.toLowerCase();
+    const ALLOWED_ADMIN_EMAILS = [
+      'helpus.ecommerce@gmail.com',
+      'wagner.redes@gmail.com',
+      'pluralocacoes@gmail.com',
+      'pluralocacoes.jp@gmail.com'
+    ];
+
+    const emailLower = email.toLowerCase().trim();
+
+    if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+      return res.status(403).json({
+        error: `⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão de acesso ao sistema administrativo.`
+      });
+    }
+
     let user = await prisma.user.findUnique({ where: { email: emailLower } });
 
     let expectedRole = 'CLIENT';

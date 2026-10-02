@@ -4,6 +4,13 @@ const AuthContext = createContext();
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
+const ALLOWED_ADMIN_EMAILS = [
+  "helpus.ecommerce@gmail.com",
+  "wagner.redes@gmail.com",
+  "pluralocacoes@gmail.com",
+  "pluralocacoes.jp@gmail.com"
+];
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("plural_user");
@@ -11,6 +18,12 @@ export function AuthProvider({ children }) {
       try {
         const parsed = JSON.parse(savedUser);
         const emailLower = (parsed.email || "").toLowerCase().trim();
+        if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+          localStorage.removeItem("plural_user");
+          localStorage.removeItem("plural_token");
+          localStorage.removeItem("plural_google_auth_user");
+          return null;
+        }
         let role = parsed.roleCode || parsed.role || "CLIENT";
         if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
           role = "DEVELOPER";
@@ -50,10 +63,15 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true);
     try {
+      const emailLower = (email || "").toLowerCase().trim();
+      if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+        throw new Error(`⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão de acesso ao sistema.`);
+      }
+
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: emailLower, password })
       });
 
       const data = await response.json();
@@ -61,7 +79,6 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || "Falha ao realizar login.");
       }
 
-      const emailLower = (data.user.email || "").toLowerCase().trim();
       let role = data.user.roleCode || data.user.role || "CLIENT";
       if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
         role = "DEVELOPER";
@@ -74,12 +91,14 @@ export function AuthProvider({ children }) {
       setUser(updatedUser);
       return { ...data, user: updatedUser };
     } catch (err) {
-      // Fallback local se a API backend estiver offline
       const emailLower = (email || "").toLowerCase().trim();
+      if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+        throw new Error(`⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão de acesso ao sistema.`);
+      }
+
       let role = "CLIENT";
       if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") role = "DEVELOPER";
-      else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com" || emailLower.includes("gerente")) role = "STORE_OWNER";
-      else if (emailLower.includes("operador")) role = "OPERATOR";
+      else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") role = "STORE_OWNER";
 
       const mockUser = {
         id: `usr-${Date.now()}`,
@@ -100,6 +119,18 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = async (googleUser) => {
     setLoading(true);
+    const emailLower = (googleUser.email || "").toLowerCase().trim();
+
+    if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+      setLoading(false);
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem("plural_user");
+      localStorage.removeItem("plural_token");
+      localStorage.removeItem("plural_google_auth_user");
+      throw new Error(`⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão de acesso ao sistema.`);
+    }
+
     try {
       const response = await fetch(`${API_BASE}/auth/google`, {
         method: "POST",
@@ -112,7 +143,6 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || "Falha na autenticação via Google.");
       }
 
-      const emailLower = (data.user.email || googleUser.email || "").toLowerCase().trim();
       let role = data.user.roleCode || data.user.role || "CLIENT";
       if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
         role = "DEVELOPER";
@@ -125,12 +155,17 @@ export function AuthProvider({ children }) {
       setUser(updatedUser);
       return { ...data, user: updatedUser };
     } catch (err) {
-      const emailLower = (googleUser.email || "").toLowerCase().trim();
+      if (err.message && err.message.includes("Acesso Negado")) {
+        throw err;
+      }
+
       let role = "CLIENT";
       if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
         role = "DEVELOPER";
       } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
         role = "STORE_OWNER";
+      } else {
+        throw new Error(`⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão de acesso ao sistema.`);
       }
 
       const mockUser = {
@@ -153,10 +188,15 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password, phone) => {
     setLoading(true);
     try {
+      const emailLower = (email || "").toLowerCase().trim();
+      if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+        throw new Error(`⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão para cadastro.`);
+      }
+
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, phone })
+        body: JSON.stringify({ name, email: emailLower, password, phone })
       });
 
       const data = await response.json();
@@ -164,7 +204,6 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || "Falha ao realizar cadastro.");
       }
 
-      const emailLower = (data.user.email || "").toLowerCase().trim();
       let role = data.user.roleCode || data.user.role || "CLIENT";
       if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
         role = "DEVELOPER";
@@ -178,6 +217,10 @@ export function AuthProvider({ children }) {
       return { ...data, user: updatedUser };
     } catch (err) {
       const emailLower = (email || "").toLowerCase().trim();
+      if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+        throw new Error(`⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão para cadastro.`);
+      }
+
       let role = "CLIENT";
       if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") role = "DEVELOPER";
       else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") role = "STORE_OWNER";
