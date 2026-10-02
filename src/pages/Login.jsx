@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import { useGoogleAuth, GoogleLoginButton } from "../shared/googleAuth/index.js";
@@ -10,13 +10,11 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
-  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
   const [successNotice, setSuccessNotice] = useState(false);
   const [authedUserData, setAuthedUserData] = useState(null);
 
-  // Hook Mestre de Autenticação Google OAuth (@shared/googleAuth - Padrão Publicarte & Ecossistema HelpUS)
+  // Hook de Autenticação Google OAuth (Padrão Kaline Modas)
   const {
-    user: googleAuthUser,
     isLoading: googleLoading,
     error: googleAuthError,
     login: triggerGoogleLogin,
@@ -46,7 +44,7 @@ export default function Login() {
         } else {
           navigate("/minha-conta");
         }
-      }, 600);
+      }, 500);
     }
   });
 
@@ -62,12 +60,6 @@ export default function Login() {
   const handleGoogleLoginButtonClick = () => {
     clearGoogleError();
     setErro("");
-
-    if (!isCaptchaVerified) {
-      alert('Por favor, marque a caixa "Não sou um robô" para continuar com o login.');
-      return;
-    }
-
     triggerGoogleLogin();
   };
 
@@ -86,69 +78,46 @@ export default function Login() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-16">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl relative">
-        <div className="text-center space-y-2">
-          <div className="inline-flex p-3.5 rounded-full bg-helpusOrange/15 border border-helpusOrange/30 text-helpusOrange text-2xl font-bold mb-1 shadow-lg shadow-helpusOrange/20">
-            🔐
-          </div>
-          <h1 className="text-2xl font-black text-white uppercase tracking-tight">PAINEL ADMINISTRATIVO</h1>
-          <h2 className="text-xs font-bold text-helpusOrange uppercase tracking-wider">PLURAL LOCAÇÕES & EVENTOS</h2>
-          <p className="text-neutral-400 text-xs mt-1">
-            Acesso restrito para gestão da loja, catálogo e controle de orçamentos.
+      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl relative text-center">
+        {/* Ícone de Chave no topo (Padrão Kaline Modas) */}
+        <div className="inline-flex p-4 rounded-full bg-helpusOrange/15 border border-helpusOrange/30 text-helpusOrange text-2xl font-bold mb-1 shadow-lg shadow-helpusOrange/20">
+          🔑
+        </div>
+
+        <div>
+          <h1 className="text-2xl font-black text-white uppercase tracking-tight">Acessar Plataforma</h1>
+          <p className="text-neutral-400 text-xs mt-1 leading-relaxed">
+            Entre para gerenciar seus orçamentos de locação ou acesse seu painel operacional.
           </p>
         </div>
 
-        {/* Notificação de Sucesso ao Autenticar via Google */}
+        {/* Notificação de Sucesso */}
         {successNotice && authedUserData && (
-          <div className="p-4 bg-emerald-950/80 border border-emerald-500/40 rounded-2xl text-emerald-200 space-y-2 animate-fadeIn backdrop-blur">
-            <div className="flex items-center justify-center gap-2 font-bold text-xs text-emerald-400">
-              <span>✅ Autenticado com Sucesso: {authedUserData.email}</span>
+          <div className="p-4 bg-emerald-950/80 border border-emerald-500/40 rounded-2xl text-emerald-200 space-y-1 animate-fadeIn text-xs">
+            <div className="font-bold text-emerald-400">
+              ✅ Autenticado com Sucesso: {authedUserData.email}
             </div>
-            <p className="text-xs text-emerald-300/90 text-center leading-relaxed">
+            <p className="text-emerald-300/80 text-center">
               Redirecionando para a Área Administrativa...
             </p>
           </div>
         )}
 
         {displayError && (
-          <div className="p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded-2xl font-bold flex items-center justify-center gap-2">
+          <div className="p-3.5 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded-2xl font-bold flex items-center justify-center gap-2">
             <span>⚠️</span>
             <span>{displayError}</span>
           </div>
         )}
 
-        {/* Widget de Captcha "Não sou um robô" (Padrão Publicarte & HelpUS Ecosystem) */}
-        <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 flex items-center justify-between my-2 text-left shadow-inner">
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={isCaptchaVerified}
-              onChange={(e) => {
-                setIsCaptchaVerified(e.target.checked);
-                if (e.target.checked) {
-                  setErro("");
-                  clearGoogleError();
-                }
-              }}
-              className="w-5 h-5 accent-helpusOrange rounded border-neutral-700 cursor-pointer"
-            />
-            <span className="text-xs font-bold text-neutral-200">Não sou um robô</span>
-          </label>
-          <div className="flex flex-col items-end text-[10px] text-neutral-500">
-            <span className="text-helpusOrange font-bold">🛡️ reCAPTCHA</span>
-            <span>Segurança HelpUS</span>
-          </div>
-        </div>
-
-        {/* Botão Oficial de Login do Google (Padrão Publicarte & Ecossistema HelpUS) */}
-        <div className="pt-1">
+        {/* Botão Oficial de Login do Google (Padrão Kaline Modas: Simples, Direto e Elegante) */}
+        <div className="pt-2">
           <GoogleLoginButton
             onClick={handleGoogleLoginButtonClick}
             isLoading={googleLoading}
-            disabled={!isCaptchaVerified || googleLoading}
             label="ENTRAR COM O GOOGLE"
             variant="dark"
-            className={!isCaptchaVerified ? "opacity-50 cursor-not-allowed" : ""}
+            className="w-full py-4 bg-neutral-950 hover:bg-neutral-800 text-white border border-neutral-700 hover:border-helpusOrange font-bold text-xs rounded-2xl shadow-xl transition-all hover:scale-[1.01]"
           />
         </div>
 
@@ -158,7 +127,7 @@ export default function Login() {
           <div className="flex-1 border-t border-neutral-800"></div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs text-left">
           <div>
             <label className="block text-neutral-300 font-semibold mb-1">E-mail *</label>
             <input
@@ -192,13 +161,11 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="border-t border-neutral-800 pt-4 text-center text-xs text-neutral-400 space-y-2">
-          <div>
-            Ainda não tem conta?{" "}
-            <Link to="/cadastro" className="text-helpusOrange font-bold hover:underline">
-              Cadastre-se gratuitamente
-            </Link>
-          </div>
+        <div className="border-t border-neutral-800 pt-4 text-center text-xs text-neutral-400">
+          Ainda não tem conta?{" "}
+          <Link to="/cadastro" className="text-helpusOrange font-bold hover:underline">
+            Cadastre-se gratuitamente
+          </Link>
         </div>
       </div>
     </div>
