@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -19,7 +19,13 @@ const MenuLink = ({ to, children }) => (
 export default function Header() {
   const [open, setOpen] = useState(false);
   const { totalItensCount, openCart } = useCart();
-  const { user, isAuthenticated, isAdmin } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-neutral-950/80 border-b border-neutral-800/80">
@@ -41,34 +47,58 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-2">
           <MenuLink to="/catalogo">📦 Catálogo</MenuLink>
           <MenuLink to="/orcamentos">⚡ Faça Seu Orçamento</MenuLink>
-          {isAdmin && <MenuLink to="/admin">Admin ⚙️</MenuLink>}
+          {isAdmin ? (
+            <MenuLink to="/admin">Admin ⚙️</MenuLink>
+          ) : (
+            <MenuLink to="/login">Admin ⚙️</MenuLink>
+          )}
         </nav>
 
         {/* Ações (Login/Conta, Carrinho & WhatsApp) */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Link
-              to="/minha-conta"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-semibold text-white hover:bg-neutral-800 transition"
-              title="Acessar Minha Conta"
-            >
-              <span className="w-6 h-6 rounded-lg bg-helpusOrange text-white flex items-center justify-center font-bold text-[11px]">
-                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-              </span>
-              <span className="hidden sm:inline line-clamp-1 max-w-[120px]">{user.name}</span>
-            </Link>
+            <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 p-1.5 rounded-2xl">
+              <Link
+                to="/minha-conta"
+                className="flex items-center gap-2 px-2.5 py-1 rounded-xl text-xs font-semibold text-white hover:bg-neutral-800 transition"
+                title={`Logado como ${user.email || user.name}`}
+              >
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name}
+                    className="w-6 h-6 rounded-lg object-cover border border-neutral-700"
+                  />
+                ) : (
+                  <span className="w-6 h-6 rounded-lg bg-helpusOrange text-white flex items-center justify-center font-bold text-[11px]">
+                    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                  </span>
+                )}
+                <span className="hidden sm:inline line-clamp-1 max-w-[130px] font-bold">
+                  {user.name || user.email?.split("@")[0]}
+                </span>
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="px-2 py-1 bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800/60 rounded-xl text-[11px] font-bold transition cursor-pointer"
+                title="Sair / Desconectar Conta"
+              >
+                Sair 🚪
+              </button>
+            </div>
           ) : (
             <Link
               to="/login"
-              className="px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-semibold text-neutral-200 hover:text-white hover:bg-neutral-800 transition"
+              className="px-4 py-2 rounded-xl bg-helpusOrange/15 border border-helpusOrange/40 text-xs font-bold text-helpusOrange hover:bg-helpusOrange hover:text-white transition cursor-pointer shadow-sm"
             >
-              Entrar 🔑
+              Entrar com Google 🔑
             </Link>
           )}
 
           <button
             onClick={openCart}
-            className="relative p-2 rounded-xl bg-neutral-900 border border-neutral-800 text-white hover:bg-neutral-800 transition flex items-center justify-center"
+            className="relative p-2 rounded-xl bg-neutral-900 border border-neutral-800 text-white hover:bg-neutral-800 transition flex items-center justify-center cursor-pointer"
             title="Abrir carrinho de orçamento"
             aria-label="Carrinho"
           >
@@ -114,17 +144,26 @@ export default function Header() {
             ⚡ Faça Seu Orçamento
           </NavLink>
           {isAuthenticated ? (
-            <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="block py-2 text-neutral-200 font-semibold">
-              Minha Conta ({user.name})
-            </NavLink>
+            <div className="py-2 flex items-center justify-between border-t border-neutral-800 pt-3">
+              <NavLink to="/minha-conta" onClick={() => setOpen(false)} className="text-neutral-200 font-semibold">
+                Minha Conta ({user.name})
+              </NavLink>
+              <button onClick={() => { handleLogout(); setOpen(false); }} className="text-xs text-red-400 font-bold">
+                Sair 🚪
+              </button>
+            </div>
           ) : (
-            <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-neutral-200 font-semibold">
-              Entrar / Cadastrar 🔑
+            <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-bold">
+              Entrar com Google 🔑
             </NavLink>
           )}
-          {isAdmin && (
+          {isAdmin ? (
             <NavLink to="/admin" onClick={() => setOpen(false)} className="block py-2 text-helpusOrange font-semibold">
               Painel Admin ⚙️
+            </NavLink>
+          ) : (
+            <NavLink to="/login" onClick={() => setOpen(false)} className="block py-2 text-neutral-400 font-semibold">
+              Acesso Admin ⚙️
             </NavLink>
           )}
         </div>

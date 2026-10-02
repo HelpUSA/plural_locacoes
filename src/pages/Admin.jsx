@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useProducts } from "../context/ProductContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ContratoPDF from "../components/ContratoPDF.jsx";
 import OrcamentoPDF from "../components/OrcamentoPDF.jsx";
 import ReciboPDF from "../components/ReciboPDF.jsx";
@@ -12,6 +12,13 @@ import DeveloperLicensingPanel from "../components/DeveloperLicensingPanel.jsx";
 export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { user, token, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAdmin && user?.role !== "ADMIN" && user?.role !== "DEVELOPER") {
+      navigate("/login");
+    }
+  }, [isAdmin, user, navigate]);
 
   const [abaAtiva, setAbaAtiva] = useState("produtos"); // "produtos", "categorias", "romaneio", "financeiro", "relatorios", "manutencao", "usuarios", "configs", "manual"
   const [pedidos, setPedidos] = useState([]);
