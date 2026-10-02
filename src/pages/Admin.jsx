@@ -730,16 +730,19 @@ export default function Admin() {
             👨‍🔧 Manutenção
           </button>
 
-          <button
-            onClick={() => setAbaAtiva("usuarios")}
-            className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
-              abaAtiva === "usuarios"
-                ? "bg-helpusOrange text-white shadow-md"
-                : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
-            }`}
-          >
-            👥 Usuários ({usuarios.length})
-          </button>
+          {/* Aba Usuários restrita para DEVELOPER (SuperAdmin: helpus.ecommerce@gmail.com / wagner.redes@gmail.com) */}
+          {user?.role === "DEVELOPER" && (
+            <button
+              onClick={() => setAbaAtiva("usuarios")}
+              className={`py-2 px-3 text-xs font-bold rounded-xl transition ${
+                abaAtiva === "usuarios"
+                  ? "bg-helpusOrange text-white shadow-md"
+                  : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
+              }`}
+            >
+              👥 Usuários ({usuarios.length})
+            </button>
+          )}
 
           <button
             onClick={() => setAbaAtiva("configs")}
@@ -763,7 +766,8 @@ export default function Admin() {
             📖 Manual & Treinamento
           </button>
 
-          {(user?.role === "DEVELOPER" || user?.role === "ADMIN") && (
+          {/* Aba Licenciamento restrita para DEVELOPER (SuperAdmin) */}
+          {user?.role === "DEVELOPER" && (
             <button
               onClick={() => setAbaAtiva("licenciamento")}
               className={`py-2 px-3 text-xs font-bold rounded-xl transition border ${
@@ -1127,8 +1131,8 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ABA 7: Gestão Completa & Edição de Usuários (RBAC + Dados) */}
-      {abaAtiva === "usuarios" && (
+      {/* ABA 7: Gestão Completa & Edição de Usuários (RBAC + Dados - Exclusivo DEVELOPER) */}
+      {abaAtiva === "usuarios" && user?.role === "DEVELOPER" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
