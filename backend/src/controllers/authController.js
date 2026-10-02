@@ -99,12 +99,14 @@ export async function loginGoogle(req, res) {
     const emailLower = email.toLowerCase();
     let user = await prisma.user.findUnique({ where: { email: emailLower } });
 
-    if (!user) {
-      let userRole = 'CLIENT';
-      if (emailLower === 'helpus.ecommerce@gmail.com' || emailLower === 'wagner.redes@gmail.com') {
-        userRole = 'DEVELOPER';
-      }
+    let expectedRole = 'CLIENT';
+    if (emailLower === 'helpus.ecommerce@gmail.com' || emailLower === 'wagner.redes@gmail.com') {
+      expectedRole = 'DEVELOPER';
+    } else if (emailLower === 'pluralocacoes@gmail.com' || emailLower === 'pluralocacoes.jp@gmail.com') {
+      expectedRole = 'STORE_OWNER';
+    }
 
+    if (!user) {
       const randomPassword = await bcrypt.hash(`google_${Date.now()}_${Math.random()}`, 10);
 
       user = await prisma.user.create({
@@ -112,16 +114,21 @@ export async function loginGoogle(req, res) {
           name: name || email.split('@')[0],
           email: emailLower,
           password: randomPassword,
-          roleCode: userRole,
+          roleCode: expectedRole,
           googleId: googleId || `g-${Date.now()}`,
           avatarUrl: picture || ''
         }
       });
     } else {
-      if (picture && !user.avatarUrl) {
+      const updateData = {};
+      if (picture && !user.avatarUrl) updateData.avatarUrl = picture;
+      if (googleId && !user.googleId) updateData.googleId = googleId;
+      if (expectedRole !== 'CLIENT' && user.roleCode !== expectedRole) updateData.roleCode = expectedRole;
+
+      if (Object.keys(updateData).length > 0) {
         user = await prisma.user.update({
           where: { id: user.id },
-          data: { avatarUrl: picture, googleId: googleId || user.googleId }
+          data: updateData
         });
       }
     }

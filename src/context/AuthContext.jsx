@@ -9,7 +9,15 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem("plural_user");
     if (savedUser) {
       try {
-        return JSON.parse(savedUser);
+        const parsed = JSON.parse(savedUser);
+        const emailLower = (parsed.email || "").toLowerCase().trim();
+        let role = parsed.roleCode || parsed.role || "CLIENT";
+        if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+          role = "DEVELOPER";
+        } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+          role = "STORE_OWNER";
+        }
+        return { ...parsed, roleCode: role, role };
       } catch (e) {
         console.error("Erro ao ler usuário salvo:", e);
       }
@@ -53,20 +61,30 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || "Falha ao realizar login.");
       }
 
+      const emailLower = (data.user.email || "").toLowerCase().trim();
+      let role = data.user.roleCode || data.user.role || "CLIENT";
+      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+        role = "DEVELOPER";
+      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+        role = "STORE_OWNER";
+      }
+
+      const updatedUser = { ...data.user, roleCode: role, role };
       setToken(data.token);
-      setUser(data.user);
-      return data;
+      setUser(updatedUser);
+      return { ...data, user: updatedUser };
     } catch (err) {
-      // Fallback local se a API backend estiver inacessível
+      // Fallback local se a API backend estiver offline
+      const emailLower = (email || "").toLowerCase().trim();
       let role = "CLIENT";
-      if (email.toLowerCase() === "helpus.ecommerce@gmail.com") role = "DEVELOPER";
-      else if (email.toLowerCase().includes("gerente")) role = "STORE_OWNER";
-      else if (email.toLowerCase().includes("operador")) role = "OPERATOR";
+      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") role = "DEVELOPER";
+      else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com" || emailLower.includes("gerente")) role = "STORE_OWNER";
+      else if (emailLower.includes("operador")) role = "OPERATOR";
 
       const mockUser = {
         id: `usr-${Date.now()}`,
         name: email.split("@")[0],
-        email,
+        email: emailLower,
         roleCode: role,
         role,
         phone: "(83) 99908-7188"
@@ -94,19 +112,31 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || "Falha na autenticação via Google.");
       }
 
-      setToken(data.token);
-      setUser(data.user);
-      return data;
-    } catch (err) {
-      let role = "CLIENT";
-      if (googleUser.email && googleUser.email.toLowerCase() === "helpus.ecommerce@gmail.com") {
+      const emailLower = (data.user.email || googleUser.email || "").toLowerCase().trim();
+      let role = data.user.roleCode || data.user.role || "CLIENT";
+      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
         role = "DEVELOPER";
+      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+        role = "STORE_OWNER";
+      }
+
+      const updatedUser = { ...data.user, roleCode: role, role };
+      setToken(data.token);
+      setUser(updatedUser);
+      return { ...data, user: updatedUser };
+    } catch (err) {
+      const emailLower = (googleUser.email || "").toLowerCase().trim();
+      let role = "CLIENT";
+      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+        role = "DEVELOPER";
+      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+        role = "STORE_OWNER";
       }
 
       const mockUser = {
         id: `google-${Date.now()}`,
-        name: googleUser.name || googleUser.email.split("@")[0],
-        email: googleUser.email,
+        name: googleUser.name || emailLower.split("@")[0],
+        email: emailLower,
         avatarUrl: googleUser.picture || "",
         roleCode: role,
         role
@@ -134,14 +164,25 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || "Falha ao realizar cadastro.");
       }
 
-      setToken(data.token);
-      setUser(data.user);
-      return data;
-    } catch (err) {
-      let role = "CLIENT";
-      if (email.toLowerCase() === "helpus.ecommerce@gmail.com") role = "DEVELOPER";
+      const emailLower = (data.user.email || "").toLowerCase().trim();
+      let role = data.user.roleCode || data.user.role || "CLIENT";
+      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+        role = "DEVELOPER";
+      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+        role = "STORE_OWNER";
+      }
 
-      const mockUser = { id: `usr-${Date.now()}`, name, email, roleCode: role, role, phone };
+      const updatedUser = { ...data.user, roleCode: role, role };
+      setToken(data.token);
+      setUser(updatedUser);
+      return { ...data, user: updatedUser };
+    } catch (err) {
+      const emailLower = (email || "").toLowerCase().trim();
+      let role = "CLIENT";
+      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") role = "DEVELOPER";
+      else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") role = "STORE_OWNER";
+
+      const mockUser = { id: `usr-${Date.now()}`, name, email: emailLower, roleCode: role, role, phone };
       setUser(mockUser);
       setToken("mock-token-session");
       return { user: mockUser, token: "mock-token-session" };
@@ -155,6 +196,7 @@ export function AuthProvider({ children }) {
     setToken(null);
     localStorage.removeItem("plural_user");
     localStorage.removeItem("plural_token");
+    localStorage.removeItem("plural_google_auth_user");
   };
 
   const userRole = user?.roleCode || user?.role || "CLIENT";
