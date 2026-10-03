@@ -9,3 +9,6 @@ dist/
 Thumbs.db
 "@ | Out-File -Encoding utf8 .gitignore
 .vercel
+
+scratch/
+
