@@ -12,8 +12,8 @@ const INITIAL_PRODUCTS = [
     departamento: "mobiliario-lounges",
     precoDiaria: 40.0,
     precoSemanal: 180.0,
-    imagem: "/mesas-e-cadeiras-01.jpeg",
-    galeria: ["/mesas-e-cadeiras-01.jpeg"],
+    imagem: "/mesa-redonda-120.jpg",
+    galeria: ["/mesa-redonda-120.jpg"],
     descricao: "Mesa redonda em MDF resistente de 15mm com bordas seladas e pés metálicos com travamento de segurança. Acomoda confortavelmente 8 lugares.",
     cor: "Madeira Natural / Pés Pretos",
     material: "MDF Nobre com Estrutura de Aço Carbono",
@@ -39,8 +39,8 @@ const INITIAL_PRODUCTS = [
     departamento: "kits-ambientes",
     precoDiaria: 20.0,
     precoSemanal: 80.0,
-    imagem: "/mesas-e-cadeiras-02.jpeg",
-    galeria: ["/mesas-e-cadeiras-02.jpeg"],
+    imagem: "/cadeira-branca.jpg",
+    galeria: ["/cadeira-branca.jpg"],
     descricao: "Conjunto prático com 1 mesa quadrada plástica branca e 4 cadeiras bistro reforçadas. Ideal para praia, churrascos e eventos casuais.",
     cor: "Branca Clean",
     material: "Polipropileno 100% Injetado",
@@ -92,8 +92,8 @@ const INITIAL_PRODUCTS = [
     departamento: "mobiliario-lounges",
     precoDiaria: 5.0,
     precoSemanal: 20.0,
-    imagem: "/mesas-e-cadeiras-01.jpeg",
-    galeria: ["/mesas-e-cadeiras-01.jpeg"],
+    imagem: "https://images.unsplash.com/photo-1541558869434-2840d308329a?w=800&q=80",
+    galeria: ["https://images.unsplash.com/photo-1541558869434-2840d308329a?w=800&q=80"],
     descricao: "Cadeira bistrô branca higienizada com certificação INMETRO de resistência. Empilhável, versátil e lavável.",
     cor: "Branca Clean",
     material: "Polipropileno Alta Densidade",
@@ -119,8 +119,8 @@ const INITIAL_PRODUCTS = [
     departamento: "mobiliario-lounges",
     precoDiaria: 5.0,
     precoSemanal: 20.0,
-    imagem: "/mesas-e-cadeiras-02.jpeg",
-    galeria: ["/mesas-e-cadeiras-02.jpeg"],
+    imagem: "/cadeira-preta.jpg",
+    galeria: ["/cadeira-preta.jpg"],
     descricao: "Cadeira bistrô preta monobloco. Design discreto e moderno para congressos, feiras gastronômicas e eventos noturnos.",
     cor: "Preta Fosca",
     material: "Polipropileno 100% Reciclável",
@@ -144,8 +144,8 @@ const INITIAL_PRODUCTS = [
     departamento: "coberturas-estruturas",
     precoDiaria: 350.0,
     precoSemanal: 1300.0,
-    imagem: "/mesas-e-cadeiras-03.jpeg",
-    galeria: ["/mesas-e-cadeiras-03.jpeg"],
+    imagem: "/Tenda-6x6-branca.jpg",
+    galeria: ["/Tenda-6x6-branca.jpg"],
     descricao: "Estrutura robusta em aço galvanizado a fogo com lona PVC blackout impermeável e anti-chamas. Cobertura total de 36m² com montagem inclusa.",
     cor: "Branca Blackout Térmica",
     material: "Lona PVC TD1000 & Aço Galvanizado",
@@ -170,7 +170,14 @@ export function ProductProvider({ children }) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 3) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 3) {
+          // Detectar e limpar cache antigo caso contenha imagens duplicadas das versoes anteriores
+          const hasStaleImages = parsed.some(p => p.imagem === "/mesas-e-cadeiras-01.jpeg" && parsed.filter(x => x.imagem === "/mesas-e-cadeiras-01.jpeg").length > 1);
+          if (!hasStaleImages) {
+            return parsed;
+          }
+          localStorage.removeItem("plural_products_catalog");
+        }
       } catch (e) {}
     }
     return INITIAL_PRODUCTS;
