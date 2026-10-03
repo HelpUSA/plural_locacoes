@@ -21,6 +21,21 @@ app.use('/api', apiRoutes);
 
 async function ensureTaxonomySeed() {
   try {
+    const roles = [
+      { code: 'DEVELOPER', name: 'Desenvolvedor & Admin Geral', description: 'Acesso total irrestrito a todas as lojas, configs globais e desenvolvedor' },
+      { code: 'STORE_OWNER', name: 'Dono / Gerente da Loja', description: 'Gestão da loja, catálogo, financeiro, relatórios e operadores' },
+      { code: 'OPERATOR', name: 'Operador / Funcionário', description: 'Operação de catálogo, estoque, romaneios e status de entregas' },
+      { code: 'CLIENT', name: 'Cliente Final', description: 'Realiza locações 100% web, visualiza histórico e comprovantes' }
+    ];
+
+    for (const r of roles) {
+      await prisma.role.upsert({
+        where: { code: r.code },
+        update: r,
+        create: r
+      });
+    }
+
     const devEmails = ['helpus.ecommerce@gmail.com', 'wagner.redes@gmail.com'];
     const hashDevPassword = await bcrypt.hash('@dmLocal1993', 10);
 
