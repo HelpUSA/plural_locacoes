@@ -6,9 +6,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 const ALLOWED_ADMIN_EMAILS = [
   "helpus.ecommerce@gmail.com",
-  "wagner.redes@gmail.com",
-  "pluralocacoes@gmail.com",
-  "pluralocacoes.jp@gmail.com"
+  "pluralocacoes@gmail.com"
 ];
 
 export function AuthProvider({ children }) {
@@ -25,9 +23,9 @@ export function AuthProvider({ children }) {
           return null;
         }
         let role = parsed.roleCode || parsed.role || "CLIENT";
-        if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+        if (emailLower === "helpus.ecommerce@gmail.com") {
           role = "DEVELOPER";
-        } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+        } else if (emailLower === "pluralocacoes@gmail.com") {
           role = "STORE_OWNER";
         }
         return { ...parsed, roleCode: role, role };
@@ -80,9 +78,9 @@ export function AuthProvider({ children }) {
       }
 
       let role = data.user.roleCode || data.user.role || "CLIENT";
-      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+      if (emailLower === "helpus.ecommerce@gmail.com") {
         role = "DEVELOPER";
-      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+      } else if (emailLower === "pluralocacoes@gmail.com") {
         role = "STORE_OWNER";
       }
 
@@ -97,8 +95,8 @@ export function AuthProvider({ children }) {
       }
 
       let role = "CLIENT";
-      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") role = "DEVELOPER";
-      else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") role = "STORE_OWNER";
+      if (emailLower === "helpus.ecommerce@gmail.com") role = "DEVELOPER";
+      else if (emailLower === "pluralocacoes@gmail.com") role = "STORE_OWNER";
 
       const mockUser = {
         id: `usr-${Date.now()}`,
@@ -144,9 +142,9 @@ export function AuthProvider({ children }) {
       }
 
       let role = data.user.roleCode || data.user.role || "CLIENT";
-      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+      if (emailLower === "helpus.ecommerce@gmail.com") {
         role = "DEVELOPER";
-      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+      } else if (emailLower === "pluralocacoes@gmail.com") {
         role = "STORE_OWNER";
       }
 
@@ -160,9 +158,9 @@ export function AuthProvider({ children }) {
       }
 
       let role = "CLIENT";
-      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+      if (emailLower === "helpus.ecommerce@gmail.com") {
         role = "DEVELOPER";
-      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+      } else if (emailLower === "pluralocacoes@gmail.com") {
         role = "STORE_OWNER";
       } else {
         throw new Error(`⛔ Acesso Negado: O e-mail (${emailLower}) não possui permissão de acesso ao sistema.`);
@@ -205,9 +203,9 @@ export function AuthProvider({ children }) {
       }
 
       let role = data.user.roleCode || data.user.role || "CLIENT";
-      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") {
+      if (emailLower === "helpus.ecommerce@gmail.com") {
         role = "DEVELOPER";
-      } else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") {
+      } else if (emailLower === "pluralocacoes@gmail.com") {
         role = "STORE_OWNER";
       }
 
@@ -222,8 +220,8 @@ export function AuthProvider({ children }) {
       }
 
       let role = "CLIENT";
-      if (emailLower === "helpus.ecommerce@gmail.com" || emailLower === "wagner.redes@gmail.com") role = "DEVELOPER";
-      else if (emailLower === "pluralocacoes@gmail.com" || emailLower === "pluralocacoes.jp@gmail.com") role = "STORE_OWNER";
+      if (emailLower === "helpus.ecommerce@gmail.com") role = "DEVELOPER";
+      else if (emailLower === "pluralocacoes@gmail.com") role = "STORE_OWNER";
 
       const mockUser = { id: `usr-${Date.now()}`, name, email: emailLower, roleCode: role, role, phone };
       setUser(mockUser);

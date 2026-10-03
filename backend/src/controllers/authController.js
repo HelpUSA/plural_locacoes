@@ -20,7 +20,7 @@ export async function register(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
     let userRole = 'CLIENT';
     const emailLower = email.toLowerCase();
-    if (emailLower === 'helpus.ecommerce@gmail.com' || emailLower === 'wagner.redes@gmail.com') {
+    if (emailLower === 'helpus.ecommerce@gmail.com') {
       userRole = 'DEVELOPER';
     } else if (role === 'STORE_OWNER') {
       userRole = 'STORE_OWNER';
@@ -98,9 +98,7 @@ export async function loginGoogle(req, res) {
 
     const ALLOWED_ADMIN_EMAILS = [
       'helpus.ecommerce@gmail.com',
-      'wagner.redes@gmail.com',
-      'pluralocacoes@gmail.com',
-      'pluralocacoes.jp@gmail.com'
+      'pluralocacoes@gmail.com'
     ];
 
     const emailLower = email.toLowerCase().trim();
@@ -114,9 +112,9 @@ export async function loginGoogle(req, res) {
     let user = await prisma.user.findUnique({ where: { email: emailLower } });
 
     let expectedRole = 'CLIENT';
-    if (emailLower === 'helpus.ecommerce@gmail.com' || emailLower === 'wagner.redes@gmail.com') {
+    if (emailLower === 'helpus.ecommerce@gmail.com') {
       expectedRole = 'DEVELOPER';
-    } else if (emailLower === 'pluralocacoes@gmail.com' || emailLower === 'pluralocacoes.jp@gmail.com') {
+    } else if (emailLower === 'pluralocacoes@gmail.com') {
       expectedRole = 'STORE_OWNER';
     }
 
